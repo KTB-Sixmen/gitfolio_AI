@@ -3,7 +3,7 @@
 ## 가상환경
 1. 가상환경 생성
 ```
-python -m venv gitpo
+python -m venv venv
 ```
 2.  For Mac 
 ```
@@ -11,7 +11,7 @@ source venv/bin/activate
 ```
 3. For Windows
 ```
-.\gitpo\Scripts\Activate
+.\venv\Scripts\Activate
 ```
 
 # GitPortfolio - GitHub 기반 이력서 생성기
