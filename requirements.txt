@@ -1,0 +1,8 @@
+# 차후에 버전 필요하면 명시할것. 재점검필요
+
+fastapi
+github
+openai
+tiktoken
+pydantic
+pydantic-settings
