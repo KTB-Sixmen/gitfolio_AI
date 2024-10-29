@@ -1,8 +1,24 @@
-# 차후에 버전 필요하면 명시할것. 재점검필요
-
+# FastAPI 웹 프레임워크
 fastapi
-github
-openai
-tiktoken
+
+# Pydantic 및 Pydantic Settings
 pydantic
 pydantic-settings
+
+# GitHub API 연동을 위한 PyGithub
+PyGithub
+
+# OpenAI API 호출을 위한 라이브러리
+openai
+
+# OpenAI 모델의 토큰 처리를 위한 tiktoken
+tiktoken
+
+# 요청을 보낼 때 사용하는 requests
+requests
+
+# 비동기 서버 실행을 위한 Uvicorn
+uvicorn
+
+# 파이썬 버전 명시
+python_version >= "3.10"
