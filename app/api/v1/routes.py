@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.dto.resume_dto import ResumeRequest, ResumeResponse, Project
 from app.services.github_service import download_and_extract_zip, get_code_files_from_zip, get_combined_pr_text, get_combined_commit_diffs
 from app.services.gpt_service import  slice_and_summarize, final_summarization
+from app.services.data_service import save_summaries_to_file
 from app.config.settings import settings
 from app.prompts.resume_prompt import CODE_SUMMARY_PROMPT, PR_SUMMARY_PROMPT, COMMIT_DIFF_SUMMARY_PROMPT, FINAL_SUMMARY_PROMPT, FINAL_PROJECT_PROMPT
 
@@ -23,41 +24,43 @@ async def generate_resume(request: ResumeRequest):
         all_code = get_code_files_from_zip(zip_file,)
 
         # 코드 내용을 슬라이싱하여 요약 진행
-        initial_summary = slice_and_summarize(all_code, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=CODE_SUMMARY_PROMPT)
+        initial_summary = slice_and_summarize(all_code, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.code_summary_prompt)
         
         # 최종 요약: 길이가 긴 경우 계속해서 줄여나감
-        final_code_summary = final_summarization(initial_summary, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=FINAL_SUMMARY_PROMPT)
+        final_code_summary = final_summarization(initial_summary, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.final_summary_prompt)
+        
+        # 요약된 전체코드 내용 파일로 저장
+        save_summaries_to_file(final_code_summary, request.githubID, repo_url, output_folder=settings.code_data)
 
         # 2. PR
         # 소유자가 작성한 PR을 가져와서 하나의 큰 문자열로 결합
         combined_pr_text = get_combined_pr_text(settings.github_token, request.githubID, repo_url)
 
         # 결합된 PR 내용을 요약
-        initial_pr_summary = slice_and_summarize(combined_pr_text, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=PR_SUMMARY_PROMPT)
+        initial_pr_summary = slice_and_summarize(combined_pr_text, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.pr_summary_prompt)
         
         # 최종 요약: 길이가 긴 경우 계속해서 줄여나감
-        final_pr_summary = final_summarization(initial_pr_summary, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=FINAL_SUMMARY_PROMPT)
+        final_pr_summary = final_summarization(initial_pr_summary, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.final_summary_prompt)
+
+        # 요약된 PR 내용을 파일로 저장
+        save_summaries_to_file(final_pr_summary, request.githubID, repo_url, output_folder=settings.pr_data)
 
         # 3. Commits
         # 소유자가 작성한 커밋 diff를 가져와서 하나의 큰 문자열로 결합
         combined_commit_diffs = get_combined_commit_diffs(settings.github_token, request.githubID, repo_url)
 
         # 결합된 커밋 diff 내용을 요약
-        initial_commit_summary = slice_and_summarize(combined_commit_diffs, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=COMMIT_DIFF_SUMMARY_PROMPT)
+        initial_commit_summary = slice_and_summarize(combined_commit_diffs, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.commit_diff_summary_prompt)
 
         # 최종 요약: 길이가 긴 경우 계속해서 줄여나감
-        final_commit_summary = final_summarization(initial_commit_summary, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=FINAL_SUMMARY_PROMPT)
+        final_commit_summary = final_summarization(initial_commit_summary, settings.openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.final_summary_prompt)
 
-        print(final_code_summary)
-        print("\n-------------------\n")
-        print(final_pr_summary)
-        print("\n-------------------\n")
-        print(final_commit_summary)
-        print("\n-------------------\n")
+        # 요약된 커밋 diff 내용을 파일로 저장
+        save_summaries_to_file(final_commit_summary, request.githubID, repo_url, output_folder=settings.commit_data)
 
         # 각 레포지토리 요약을 Project 형식에 맞게 변환
         project_summary = Project(
-            projectName="ilmin_test",
+            projectName="ilmin_test", 
             projectStartedAt="2024-07", 
             projectEndedAt="2024-08",  
             skillSet="Python, OpenAI GPT",

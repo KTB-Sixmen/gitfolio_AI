@@ -1,0 +1,36 @@
+Summary:
+**프로젝트 개요: ReBook**
+
+ReBook은 클라우드 기반의 중고 전공 서적 거래를 위한 e-커머스 플랫폼입니다. 이 플랫폼은 대학 재학생 및 졸업생을 대상으로 하며, 사용자 간 직접 거래와 함께 플랫폼의 안전 장치를 결합하여 신뢰성 높은 거래 환경을 제공합니다.
+
+### 주요 기능:
+1. **회원 및 인증 관리 시스템**
+   - 카카오 소셜 로그인과 이메일 인증을 통한 회원 가입 및 로그인 기능.
+   - 마이페이지에서 회원 정보 관리.
+
+2. **상품 관리**
+   - 상품 등록, 수정, 삭제 기능 (이미지 포함).
+   - 검색 필터를 통한 상품 조회.
+
+3. **채팅 기능**
+   - 사용자 간 1:1 채팅으로 판매자와 구매자 간 대화 가능.
+   - AI 모듈을 통한 의심스러운 채팅 메시지 판별 및 경고 제공.
+
+### 기술 스택:
+- **프론트엔드**: React, Vite
+- **백엔드**: Java, Spring Boot, Spring Security, Redis, Querydsl, STOMP, Netflix Eureka
+- **AI/ML**: Fast API, PyTorch, Pandas, KcELECTRA
+- **인프라**: Docker, AWS, Ansible, Terraform, Prometheus, Grafana, Loki, Jenkins
+- **협업 도구**: Notion, Figma, GitHub
+
+### 개발 레포지토리:
+- [프론트엔드 레포](https://github.com/5-ReBook/ReBook_FE)
+- [백엔드 레포](https://github.com/5-ReBook/ReBook_BE)
+- [AI 레포](https://github.com/5-ReBook/ReBook_AI)
+
+### 추가 정보:
+- 프로젝트와 관련된 시연 영상은 [여기](https://youtu.be/msiGwnS4l-Q?si=rC5baI9Mo6tcP4zG)에서 확인할 수 있습니다.
+- 서버 아키텍쳐도 이미지로 제공되어 플랫폼의 구조를 쉽게 이해할 수 있습니다.
+
+이 프로젝트는 대학생 및 졸업생에게 편리한 중고 전공서적 거래를 제공하는 것을 목표로 하며, 안전하고 신뢰성 있는 거래 환경을 구축하기 위해 다양한 기술들을 활용하고 있습니다.
+==================================================

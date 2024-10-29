@@ -10,3 +10,10 @@ MAX_CONTENT_TOKENS = MAX_TOTAL_TOKENS - PROMPT_TOKEN_RESERVE - MAX_OUTPUT_TOKENS
 # 서버 설정
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 8000
+
+# 데이터 저장 위치
+DEFAULT_DATA = 'app/data'
+CODE_DATA = 'app/data/code'
+PR_DATA = 'app/data/pr'
+COMMIT_DATA = 'app/data/commit'
+PROJECT_DATA = 'app/data/project'

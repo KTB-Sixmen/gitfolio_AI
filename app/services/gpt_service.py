@@ -26,7 +26,7 @@ def summarize_text(text, openai_api_key, max_output_tokens, prompt):
         return ""
 
 # 코드 텍스트를 토큰 단위로 슬라이싱하여 GPT에 요약 요청
-def slice_and_summarize(all_code, openai_api_key, max_output_tokens=settings.max_output_tokens, token_limit=settings.max_content_tokens, prompt=CODE_SUMMARY_PROMPT):
+def slice_and_summarize(all_code, openai_api_key, max_output_tokens=settings.max_output_tokens, token_limit=settings.max_content_tokens, prompt=settings.code_summary_prompt):
     try:
         if not all_code.strip():  # 텍스트가 없으면 스킵
             print("No code provided for summarization. Skipping...")
@@ -50,7 +50,7 @@ def slice_and_summarize(all_code, openai_api_key, max_output_tokens=settings.max
         return ""
 
 # 최종 요약: 길이가 여전히 길면 반복적으로 최종 요약
-def final_summarization(summary_text, openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=FINAL_SUMMARY_PROMPT):
+def final_summarization(summary_text, openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.final_summary_prompt):
     try:
         if not summary_text.strip():  # 텍스트가 없으면 스킵
             print("No text provided for final summarization. Skipping...")
