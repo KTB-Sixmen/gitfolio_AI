@@ -13,3 +13,5 @@ def landing_root():
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.host, port=settings.port)
+
+# uvicorn app.main:app --reload

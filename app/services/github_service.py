@@ -16,23 +16,21 @@ def get_default_branch(repo):
         print(f"Error fetching default branch: {e}")
         return None  # 오류 발생 시 None 반환
     
-
 # GitHub 리포지토리의 ZIP 파일을 메모리에 다운로드 및 압축 해제
 def download_and_extract_zip(github_token, githubID, repo_url):
     try:
         # GitHub API로 리포지토리 가져오기
         g = Github(github_token)
+        repo_name = "/".join(str(repo_url).rstrip('/').split('/')[-2:])
+        repo = g.get_repo(repo_name) # 레포 추출
 
-        repo = g.get_repo("KakaoTechBC-GOATNINE/kakao_mlms_AI") # 소유자와 레포이름만 추출
         # 디폴트 브랜치 가져오기
         default_branch = get_default_branch(repo) 
 
-        url = f"https://github.com/KakaoTechBC-GOATNINE/kakao_mlms_AI/archive/refs/heads/{default_branch}.zip"
-        print(url)
+        url = f"https://github.com/{repo_name}/archive/refs/heads/{default_branch}.zip"
         response = requests.get(url)
         if response.status_code == 200:
             zip_file = zipfile.ZipFile(io.BytesIO(response.content))
-            print("woring3")
             return zip_file
         else:
             print(f"Failed to download repository ZIP file: {response.status_code}")
@@ -57,3 +55,64 @@ def get_code_files_from_zip(zip_file):
     except Exception as e:
         print(f"Error extracting files from ZIP: {e}")
         return ""
+
+# PR을 가져와서 문자열로 결합하는 함수
+def get_combined_pr_text(github_token, githubID, repo_url):
+    try:
+        # GitHub API로 리포지토리 가져오기
+        g = Github(github_token)
+        repo_name = "/".join(str(repo_url).rstrip('/').split('/')[-2:])
+        repo = g.get_repo(repo_name) # 레포 추출
+
+        pull_requests = repo.get_pulls(state='closed')  # 닫힌 PR만 가져오기
+        combined_text = ""
+
+        for pr in pull_requests:
+            if pr.user.login == githubID:  # 소유자가 작성한 PR인지 확인
+                title = pr.title
+                body = pr.body if pr.body else "(No PR description provided)"
+                combined_text += f"Title: {title}\n\nDescription: {body}\n\n" + "="*50 + "\n\n"
+
+        if not combined_text:
+            print(f"No pull requests found for owner {githubID}.")
+        else:
+            print(f"All PRs combined into a single string.")
+        
+        return combined_text
+
+    except Exception as e:
+        print(f"Error while fetching and combining pull requests: {e}")
+        return ""  # 오류 발생 시 빈 문자열 반환
+
+# 사용자가 작성한 모든 커밋의 diff 가져와서 문자열로 결합하는 함수
+def get_combined_commit_diffs(github_token, githubID, repo_url):
+    """
+    주어진 리포지토리에서 사용자가 작성한 커밋의 diff를 모두 가져와 하나의 문자열로 결합하는 함수
+    """
+    try:
+        # GitHub API로 리포지토리 가져오기
+        g = Github(github_token)
+        repo_name = "/".join(str(repo_url).rstrip('/').split('/')[-2:])
+        repo = g.get_repo(repo_name) # 레포 추출
+
+        commits = repo.get_commits(author=githubID)  # 사용자가 작성한 모든 커밋 가져오기
+        combined_diff_text = ""
+
+        for commit in commits:
+            commit_data = repo.get_commit(commit.sha)
+            if commit_data.author.login == githubID:  # 커밋 작성자 확인
+                diff = commit_data.files  # 커밋의 diff 가져오기
+                for file in diff:
+                    file_diff = file.patch if file.patch else "(No diff provided)"
+                    combined_diff_text += f"Commit: {commit.commit.message}\nFile: {file.filename}\nDiff:\n{file_diff}\n\n" + "="*50 + "\n\n"
+
+        if not combined_diff_text:
+            print(f"No commit diffs found for owner {githubID}.")
+        else:
+            print(f"All commit diffs combined into a single string.")
+        
+        return combined_diff_text
+
+    except Exception as e:
+        print(f"Error while fetching and combining commit diffs: {e}")
+        return ""  # 오류 발생 시 빈 문자열 반환

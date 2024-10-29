@@ -12,7 +12,7 @@ def summarize_text(text, openai_api_key, max_output_tokens, prompt):
 
         client = OpenAI(api_key=openai_api_key)
         response = client.chat.completions.create(
-            model=settings.GPT_MODEL,
+            model=settings.gpt_model,
             messages=[
                 {"role": "system", "content": "You are a senior developer who wrote the code I provided. Summarize the project by extracting key points from the code and text, and present meaningful information in a concise way, in Korean."},
                 {"role": "user", "content": f"{text}"},
@@ -34,7 +34,7 @@ def slice_and_summarize(all_code, openai_api_key, max_output_tokens=settings.max
 
         summaries = []
         print("Summarizing the full content...")
-        enc = tiktoken.encoding_for_model(settings.GPT_MODEL)  # 토큰화 엔코더 생성
+        enc = tiktoken.encoding_for_model(settings.gpt_model)  # 토큰화 엔코더 생성
         tokens = enc.encode(all_code)
 
         for i in range(0, len(tokens), token_limit):
@@ -56,7 +56,7 @@ def final_summarization(summary_text, openai_api_key, max_output_tokens=settings
             print("No text provided for final summarization. Skipping...")
             return ""    
 
-        enc = tiktoken.encoding_for_model(settings.GPT_MODEL)
+        enc = tiktoken.encoding_for_model(settings.gpt_model)
         tokens = enc.encode(summary_text)
 
         while len(tokens) > max_output_tokens:
