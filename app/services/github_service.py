@@ -116,3 +116,33 @@ def get_combined_commit_diffs(github_token, githubID, repo_url):
     except Exception as e:
         print(f"Error while fetching and combining commit diffs: {e}")
         return ""  # 오류 발생 시 빈 문자열 반환
+    
+    
+# 주어진 리포지토리에서 가장 최근 커밋과 가장 처음 커밋의 날짜를 'yyyy.mm' 형식의 문자열로 반환하는 함수
+def get_commit_dates(github_token, repo_url):
+    try:
+        # GitHub API로 리포지토리 가져오기
+        g = Github(github_token)
+        repo_name = "/".join(str(repo_url).rstrip('/').split('/')[-2:])
+        repo = g.get_repo(repo_name)  # 레포지토리 추출
+
+        # 모든 커밋 리스트 가져오기 (처음 커밋부터 최근 커밋 순서로 정렬)
+        commits = list(repo.get_commits())
+        
+        if not commits:
+            print(f"No commits found in repository {repo_name}.")
+            return None, None
+        
+        # 가장 처음 커밋과 가장 최근 커밋 추출
+        first_commit = commits[-1]  # 가장 오래된 커밋 (목록의 끝)
+        latest_commit = commits[0]  # 가장 최근 커밋 (목록의 시작)
+
+        # 날짜를 'yyyy.mm' 형식의 문자열로 변환
+        first_commit_date = first_commit.commit.author.date.strftime('%Y.%m')
+        latest_commit_date = latest_commit.commit.author.date.strftime('%Y.%m')
+
+        return first_commit_date, latest_commit_date
+
+    except Exception as e:
+        print(f"Error while fetching commit dates: {e}")
+        return None, None

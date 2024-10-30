@@ -11,11 +11,17 @@ class ResumeRequest(BaseModel):
 # 응답 데이터 모델 - 프로젝트 정보
 class Project(BaseModel):
     projectName: str
-    projectStartedAt: str  # YYYY-MM 형식
-    projectEndedAt: str  # YYYY-MM 형식
+    projectStartedAt: str  # YYYY-MM-DD 형식
+    projectEndedAt: str  # YYYY-MM-DD 형식
     skillSet: str
     projectDescription: str
     repoLink: HttpUrl
+
+# gpt 프로젝트 요약문, json형태
+class GptProject(BaseModel):
+    projectName: str
+    skillSet: str
+    projectDescription: str
 
 # 응답 데이터 모델 - 전체 이력서
 class ResumeResponse(BaseModel):

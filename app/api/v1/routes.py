@@ -1,10 +1,9 @@
 from fastapi import APIRouter
 from app.dto.resume_dto import ResumeRequest, ResumeResponse, Project
-from app.services.github_service import download_and_extract_zip, get_code_files_from_zip, get_combined_pr_text, get_combined_commit_diffs
-from app.services.gpt_service import  slice_and_summarize, final_summarization
+from app.services.github_service import download_and_extract_zip, get_code_files_from_zip, get_combined_pr_text, get_combined_commit_diffs, get_commit_dates
+from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, simplify_project_summary_byJson
 from app.services.data_service import save_summaries_to_file
 from app.config.settings import settings
-from app.prompts.resume_prompt import CODE_SUMMARY_PROMPT, PR_SUMMARY_PROMPT, COMMIT_DIFF_SUMMARY_PROMPT, FINAL_SUMMARY_PROMPT, FINAL_PROJECT_PROMPT
 
 router = APIRouter()
 
@@ -58,13 +57,27 @@ async def generate_resume(request: ResumeRequest):
         # 요약된 커밋 diff 내용을 파일로 저장
         save_summaries_to_file(final_commit_summary, request.githubID, repo_url, output_folder=settings.commit_data)
 
+        # 4. Project
+        # 최종 프로젝트 요약 생성
+        project_summary = generate_project_summary(final_code_summary, final_pr_summary, final_commit_summary, settings.openai_api_key, prompt=settings.final_project_prompt)
+        
+        # 프로젝트 요약 저장
+        save_summaries_to_file(project_summary, request.githubID, repo_url, output_folder=settings.project_data)
+
+        # 5. Simplifying
+        # 프로젝트 간단한 형태와 json 형태로 반환하기
+        simplified_summary = simplify_project_summary_byJson(project_summary, settings.openai_api_key, prompt=settings.simplify_project_prompt)
+
+        # 프로젝트 시작 및 마지막 기간 가져오기
+        first_commit_date, latest_commit_date = get_commit_dates(settings.github_token, repo_url)
+
         # 각 레포지토리 요약을 Project 형식에 맞게 변환
         project_summary = Project(
-            projectName="ilmin_test", 
-            projectStartedAt="2024-07", 
-            projectEndedAt="2024-08",  
-            skillSet="Python, OpenAI GPT",
-            projectDescription=final_code_summary,
+            projectName=simplified_summary.projectName, 
+            projectStartedAt=first_commit_date, 
+            projectEndedAt=latest_commit_date,  
+            skillSet=simplified_summary.skillSet,
+            projectDescription=simplified_summary.projectDescription,
             repoLink=repo_url
         )
         project_summaries.append(project_summary)
