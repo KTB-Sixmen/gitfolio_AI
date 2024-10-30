@@ -17,6 +17,12 @@ class Project(BaseModel):
     projectDescription: str
     repoLink: HttpUrl
 
+# gpt 프로젝트 요약문, json형태
+class GptProject(BaseModel):
+    projectName: str
+    skillSet: str
+    projectDescription: str
+
 # 응답 데이터 모델 - 전체 이력서
 class ResumeResponse(BaseModel):
     projects: List[Project]

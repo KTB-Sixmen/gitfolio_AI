@@ -9,6 +9,8 @@ app.include_router(routes.router)
 
 @app.get("/")
 def landing_root():
+    print(settings.host)
+    print(settings.port)
     return {"message": "Resume AI Service"}
 
 if __name__ == "__main__":
