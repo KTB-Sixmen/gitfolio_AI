@@ -1,7 +1,7 @@
 # gitfolio_AI
 - Python 3.10 이상
 - `pip install -r requirements.txt`
-- 메인 서버 파일(main.py) 실행 -> uvicorn main:app --reload
+- 메인 서버 파일(main.py) 실행: `uvicorn main:app --reload`
 
 
 ```
