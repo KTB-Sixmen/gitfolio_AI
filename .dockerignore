@@ -1,0 +1,78 @@
+# pretrained model 일단 ai 모델은 가벼워서 같이 도커이미지에 넣을것이다.
+
+# Python 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+
+# 빌드 및 배포 파일
+dist/
+build/
+eggs/
+*.egg-info/
+.eggs/
+wheels/
+share/python-wheels/
+.installed.cfg
+
+# 가상환경
+venv/
+env/
+ENV/
+.env
+.env.*
+.python-version
+
+# IDE 설정 파일
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.pem
+
+# 테스트 관련
+.coverage
+coverage/
+htmlcov/
+.tox/
+.pytest_cache/
+.mypy_cache/
+*.lcov
+.nyc_output/
+
+# 개발 로그 및 임시 파일
+*.log
+logs/
+tmp/
+temp/
+.cache/
+.debug/
+
+# 버전 관리
+.git/
+.gitignore
+.gitattributes
+.github/
+README.md
+CHANGELOG.md
+AUTHORS
+LICENSE
+
+# 프로젝트 특화 파일
+tests/
+*.md
+!README.md
+docs/
+*.txt
+!requirements.txt
+local/
+.local/
+
+# Docker 관련
+docker-compose*
+Dockerfile*
+.dockerignore
