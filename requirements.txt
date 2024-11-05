@@ -19,6 +19,3 @@ requests
 
 # 비동기 서버 실행을 위한 Uvicorn
 uvicorn
-
-# 파이썬 버전 명시
-python_version >= "3.10"
