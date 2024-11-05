@@ -1,0 +1,14 @@
+services:
+  ai:
+    platform: linux/amd64
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: aida0/gitfolio_ai:test
+    ports:
+      - target: 8000
+        published: 80
+        protocol: tcp
+      - target: 8000
+        published: 443
+        protocol: tcp
