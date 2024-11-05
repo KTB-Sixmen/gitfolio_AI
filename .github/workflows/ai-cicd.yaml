@@ -47,7 +47,6 @@ jobs:
     steps:
 
       - name: Deploy to EC2
-        # **변경된 부분: `appleboy/ssh-action@v0.1.4`에서 `@master`로 변경** 버전 호환성땜에 오류남
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -68,6 +67,6 @@ jobs:
               -p 8000:8000 \
               -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
               -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-              -e HOST=0.0.0.0 \  
-              -e PORT=8000 \     
+              -e HOST=0.0.0.0 \
+              -e PORT=8000 \
               ${{ secrets.DOCKER_REPO }}:dev
