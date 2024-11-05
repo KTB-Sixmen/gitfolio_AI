@@ -7,6 +7,7 @@ pydantic-settings
 
 # GitHub API 연동을 위한 PyGithub
 PyGithub
+gitpython
 
 # OpenAI API 호출을 위한 라이브러리
 openai
@@ -19,6 +20,3 @@ requests
 
 # 비동기 서버 실행을 위한 Uvicorn
 uvicorn
-
-# 파이썬 버전 명시
-python_version >= "3.10"

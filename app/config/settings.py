@@ -1,11 +1,11 @@
 from pydantic_settings import BaseSettings
-from app.config.constant import GPT_MODEL, MAX_TOTAL_TOKENS, PROMPT_TOKEN_RESERVE, MAX_OUTPUT_TOKENS, MAX_CONTENT_TOKENS, DEFAULT_DATA, CODE_DATA, PR_DATA, COMMIT_DATA, PROJECT_DATA 
+from app.config.constant import GPT_MODEL, MAX_TOTAL_TOKENS, PROMPT_TOKEN_RESERVE, MAX_OUTPUT_TOKENS, MAX_CONTENT_TOKENS, DEFAULT_DATA, CODE_DATA, PR_DATA, COMMIT_DATA, PROJECT_DATA, REPO_DIRECTORY 
 from app.prompts.resume_prompt import CODE_SUMMARY_PROMPT, PR_SUMMARY_PROMPT, COMMIT_DIFF_SUMMARY_PROMPT, FINAL_SUMMARY_PROMPT, FINAL_PROJECT_PROMPT, SIMPLIFY_PROJECT_PROMPT
 
 class Settings(BaseSettings):
     # API 키
     openai_api_key: str
-    github_token: str
+    gh_token: str
 
     # 서버 설정
     host: str
@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     pr_data: str = PR_DATA 
     commit_data: str = COMMIT_DATA
     project_data: str = PROJECT_DATA 
+    repo_directory: str = REPO_DIRECTORY
 
     # Prompt 세팅
     code_summary_prompt: str = CODE_SUMMARY_PROMPT
