@@ -45,8 +45,10 @@ jobs:
     needs: build  # build 작업 완료 후 실행
     runs-on: ubuntu-latest
     steps:
+
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.3
+        # **변경된 부분: `appleboy/ssh-action@v0.1.4`에서 `@master`로 변경** 버전 호환성땜에 오류남
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
