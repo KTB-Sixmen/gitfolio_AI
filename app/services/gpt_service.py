@@ -2,7 +2,6 @@ from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
 import tiktoken 
-import json
 
 # GPT를 사용한 요약 함수
 def summarize_text(text, openai_api_key, max_output_tokens, prompt):

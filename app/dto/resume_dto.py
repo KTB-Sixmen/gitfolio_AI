@@ -4,6 +4,7 @@ from typing import List
 # 요청 데이터 모델
 class ResumeRequest(BaseModel):
     githubID: str
+    githubName: str
     personalRepo: HttpUrl
     selectedRepo: List[HttpUrl]
     requirements: str
