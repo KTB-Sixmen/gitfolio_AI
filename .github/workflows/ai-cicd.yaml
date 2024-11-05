@@ -68,4 +68,6 @@ jobs:
               -p 8000:8000 \
               -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
               -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+              -e HOST=0.0.0.0 \  # 추가
+              -e PORT=8000 \     # 추가
               ${{ secrets.DOCKER_REPO }}:dev
