@@ -11,6 +11,7 @@ PR_SUMMARY_PROMPT = (
     "and provide a summary."
 )
 
+# + - diff부분인걸 알아차려서 할것.
 COMMIT_DIFF_SUMMARY_PROMPT = (
     "Review each code to understand how the project was developed, identify the contributions "
     "made to the project, and determine what kind of developer the user is."
@@ -25,7 +26,7 @@ FINAL_PROJECT_PROMPT = (
     "Write concisely and clearly, highlighting your unique strengths rather than common development details."
 )
 
-# 너무 편향되는 감이 있음
+# 샘플에 너무 편향되는 감이 있을수 있음.
 SIMPLIFY_PROJECT_PROMPT = (
                     f"sample text:\n"
                     f"**projectName: 식당어때? (LLM을 활용한 리뷰기반 식당 추천시스템)** - **KakaoTech Bootcamp 생성형 AI**\n\n"

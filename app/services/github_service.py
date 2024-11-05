@@ -120,9 +120,12 @@ def get_combined_commit_diffs(gh_token, githubID, githubName, repo_url, clone_di
         commits = list(repo.iter_commits())
         first_commit = commits[-1]  # 가장 처음 커밋
 
+        # 커밋 작성자 확인을 위한 기준 설정
+        author_name = githubName if githubName else githubID
+        
         for commit in commits:
             # 커밋 작성자 확인
-            if commit.author.name == githubName:
+            if commit.author.name == author_name:
                 commit_message = commit.message.strip()
                 combined_diff_text += f"Commit: {commit_message}\n{'='*50}\n"
 
