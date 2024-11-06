@@ -5,6 +5,7 @@ services:
       context: ./
       dockerfile: Dockerfile
     image: aida0/gitfolio_ai:test
+    container_name: gitfolio_ai
     ports:
       - target: 8000
         published: 80
