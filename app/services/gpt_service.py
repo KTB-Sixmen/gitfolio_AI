@@ -4,7 +4,7 @@ from app.dto.resume_dto import GptProject
 import tiktoken 
 
 # GPT를 사용한 요약 함수
-def summarize_text(text, openai_api_key, max_output_tokens, prompt):
+def summarize_text(text, openai_api_key, requirements, max_output_tokens, prompt):
     try:
         if not text.strip():  # 텍스트가 비어 있는 경우 처리
             print("No text provided for summarization. Skipping...")
@@ -16,7 +16,7 @@ def summarize_text(text, openai_api_key, max_output_tokens, prompt):
             messages=[
                 {"role": "system", "content": "You are a senior developer who wrote the code I provided. Summarize the project by extracting key points from the code and text, and present meaningful information in a concise way, in Korean."},
                 {"role": "user", "content": f"{text}"},
-                {"role": "assistant", "content": f"{prompt}"}
+                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
             ],
             max_tokens=max_output_tokens
         )
@@ -26,7 +26,7 @@ def summarize_text(text, openai_api_key, max_output_tokens, prompt):
         return ""
 
 # 코드 텍스트를 토큰 단위로 슬라이싱하여 GPT에 요약 요청
-def slice_and_summarize(all_code, openai_api_key, max_output_tokens=settings.max_output_tokens, token_limit=settings.max_content_tokens, prompt=settings.code_summary_prompt):
+def slice_and_summarize(all_code, openai_api_key, requirements, max_output_tokens=settings.max_output_tokens, token_limit=settings.max_content_tokens, prompt=settings.code_summary_prompt):
     try:
         if not all_code.strip():  # 텍스트가 없으면 스킵
             print("No code provided for summarization. Skipping...")
@@ -41,7 +41,7 @@ def slice_and_summarize(all_code, openai_api_key, max_output_tokens=settings.max
             part_tokens = tokens[i:i + token_limit]
             part_text = enc.decode(part_tokens)
             print(f"Summarizing part from token {i} to {i + token_limit}")
-            summary = summarize_text(part_text, openai_api_key, max_output_tokens, prompt)
+            summary = summarize_text(part_text, openai_api_key, requirements, max_output_tokens, prompt)
             summaries.append(summary)
 
         return "\n\n".join(summaries)
@@ -50,7 +50,7 @@ def slice_and_summarize(all_code, openai_api_key, max_output_tokens=settings.max
         return ""
 
 # 최종 요약: 길이가 여전히 길면 반복적으로 최종 요약
-def final_summarization(summary_text, openai_api_key, max_output_tokens=settings.max_output_tokens, prompt=settings.final_summary_prompt):
+def final_summarization(summary_text, openai_api_key, requirements, max_output_tokens=settings.max_output_tokens, prompt=settings.final_summary_prompt):
     try:
         if not summary_text.strip():  # 텍스트가 없으면 스킵
             print("No text provided for final summarization. Skipping...")
@@ -61,7 +61,7 @@ def final_summarization(summary_text, openai_api_key, max_output_tokens=settings
 
         while len(tokens) > max_output_tokens:
             print(f"Final summarization is too long ({len(tokens)} tokens), re-summarizing...")
-            summary_text = summarize_text(summary_text, openai_api_key, max_output_tokens, prompt)
+            summary_text = summarize_text(summary_text, openai_api_key, requirements, max_output_tokens, prompt)
             tokens = enc.encode(summary_text)
         
         return summary_text
@@ -70,7 +70,7 @@ def final_summarization(summary_text, openai_api_key, max_output_tokens=settings
         return ""
 
 # 최종 프로젝트 요약을 생성하는 새로운 함수
-def generate_project_summary(code_summary, pr_summary, commit_summary, openai_api_key, prompt=settings.final_project_prompt) -> GptProject:
+def generate_project_summary(code_summary, pr_summary, commit_summary, openai_api_key, requirements, prompt=settings.final_project_prompt) -> GptProject:
     try:
         # 요약 요청
         print("Generating final project summary...")
@@ -89,7 +89,7 @@ def generate_project_summary(code_summary, pr_summary, commit_summary, openai_ap
                             f"Then, use `{pr_summary}` to describe how these issues were addressed and the development process. "
                             f"Finally, refer to `{commit_summary}` to review the user's code contributions, summarizing how they resolved problems and the outcomes achieved. "
                             "Highlight the parts personally implemented by the user.")},
-                {"role": "assistant", "content": f"{prompt}"}
+                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
             ],
             max_tokens=settings.max_output_tokens
         )
@@ -99,7 +99,7 @@ def generate_project_summary(code_summary, pr_summary, commit_summary, openai_ap
         return ""
 
 # 최종 요약된 부분, 더 간략화 시키기 및 Json형태 포맷으로 정리
-def simplify_project_summary_byJson(summary_text, openai_api_key, prompt=settings.simplify_project_prompt):
+def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, prompt=settings.simplify_project_prompt):
     try:
         if not summary_text.strip():  # 텍스트가 비어 있는 경우 처리
             print("No text provided for summarization. Skipping...")
@@ -123,7 +123,7 @@ def simplify_project_summary_byJson(summary_text, openai_api_key, prompt=setting
                         "Please use the format to structure the summary based on the text provided(sample text). But, Do not use the context in the format. only use this in the structure and how to write the sentence."
                     )
                 },
-                {"role": "assistant", "content": f"{prompt}"}
+                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
             ],
             max_tokens=settings.max_output_tokens,
             response_format=GptProject,
