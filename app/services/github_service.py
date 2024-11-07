@@ -7,8 +7,6 @@ import os
 import shutil
 import requests
 
-FILE_EXTENSIONS = ['.py', '.js', '.java', '.cpp', '.c', '.go', '.rb', '.ts', '.html', '.md' ]
-
 # GitHub 리포지토리의 디폴트 브랜치를 가져오는 기능
 def get_default_branch(repo):
     try:
@@ -49,7 +47,7 @@ def get_code_files_from_zip(zip_file):
             return ""
         all_code = ""
         for file_info in zip_file.infolist():
-            if any(file_info.filename.endswith(ext) for ext in FILE_EXTENSIONS):
+            if any(file_info.filename.endswith(ext) for ext in settings.file_extensions):
                 print(f"Processing file: {file_info.filename}")
                 with zip_file.open(file_info) as file:
                     file_content = file.read().decode('utf-8', errors='ignore')
@@ -137,7 +135,7 @@ def get_combined_commit_diffs(gh_token, githubID, githubName, repo_url, clone_di
                 # 이후 커밋: 변경된 라인만 표시
                 else:
                     for diff in commit.diff(commit.parents[0], create_patch=True):
-                        if diff.b_path and any(diff.b_path.endswith(ext) for ext in FILE_EXTENSIONS):
+                        if diff.b_path and any(diff.b_path.endswith(ext) for ext in settings.file_extensions):
                             file_diff_text = f"File: {diff.b_path}\n"
                             
                             # 각 파일에서 변경된 라인의 줄 번호와 변경 내용 추출
@@ -215,7 +213,7 @@ def clone_and_extract_files(repo_url, clone_dir=settings.repo_directory):
         all_code = ""
         for root, _, files in os.walk(repo_path):
             for file in files:
-                if any(file.endswith(ext) for ext in FILE_EXTENSIONS):
+                if any(file.endswith(ext) for ext in settings.file_extensions):
                     file_path = os.path.join(root, file)
                     print(f"Processing file: {file_path}")
                     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
