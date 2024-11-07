@@ -28,12 +28,20 @@ FINAL_PROJECT_PROMPT = (
 
 # 샘플에 너무 편향되는 감이 있을수 있음.
 SIMPLIFY_PROJECT_PROMPT = (
-                    f"sample text:\n"
-                    f"**projectName: 식당어때? (LLM을 활용한 리뷰기반 식당 추천시스템)** - **KakaoTech Bootcamp 생성형 AI**\n\n"
-                    f"skillSet: (텍스트기반 비정형 데이터 파이프라인, Sentence-BERT, KcELENTRA, Elastic Search, HDBSCAN)\n\n"
-                    f"projectDescription: *사용자가 원하는 위치와 음식을 받아 AI모델이 식당들을 평가를 진행하여 랭킹화해서 제공하고 리뷰의 전반적인 내용을 클러스터링을 활용하여 제공하는 서비스. "
-                    f"카카오맵에서 식당 리뷰를 셀리니움과 멀티프로세싱을 사용해 12만개 크롤링한후 분석하였고, elastic search에 저장하고 전처리, 레이블링을 진행하는 데이터 파이프라인을 만들었으며 "
-                    f"KcELECTRA 모델과 전처리된 데이터를 기반으로 모델을 만들고 wandb로 모델 결과를 시각화해봄. 이 만든 모델과 BiLSTM로 만든 모델을 앙상블과정을 통해 랭킹화하는 api를 fastapi통해 만듬. "
-                    f"추가로 umap과 hdbscan 활용하여 식당리뷰를 클러스터링 api를 만들어 가장 많이 군집화된 리뷰단어들을 리턴하는 부분을 구축함. 초기 모델은 응답까지 222초 걸리던것을 애자일한 협업과정을 "
-                    f"거쳐 디비생성, 배치사용등의 필요성을 느끼고 개선하여 응답속도를 26초까지 향상함.*\n\n"
+    f"sample text:\n"
+    f"**projectName: 식당어때? (LLM을 활용한 리뷰기반 식당 추천시스템)** - **KakaoTech Bootcamp 생성형 AI**\n\n"
+    f"skillSet: (텍스트기반 비정형 데이터 파이프라인, Sentence-BERT, KcELENTRA, Elastic Search, HDBSCAN)\n\n"
+    f"projectDescription: *사용자가 원하는 위치와 음식을 받아 AI모델이 식당들을 평가를 진행하여 랭킹화해서 제공하고 리뷰의 전반적인 내용을 클러스터링을 활용하여 제공하는 서비스. "
+    f"카카오맵에서 식당 리뷰를 셀리니움과 멀티프로세싱을 사용해 12만개 크롤링한후 분석하였고, elastic search에 저장하고 전처리, 레이블링을 진행하는 데이터 파이프라인을 만들었으며 "
+    f"KcELECTRA 모델과 전처리된 데이터를 기반으로 모델을 만들고 wandb로 모델 결과를 시각화해봄. 이 만든 모델과 BiLSTM로 만든 모델을 앙상블과정을 통해 랭킹화하는 api를 fastapi통해 만듬. "
+    f"추가로 umap과 hdbscan 활용하여 식당리뷰를 클러스터링 api를 만들어 가장 많이 군집화된 리뷰단어들을 리턴하는 부분을 구축함. 초기 모델은 응답까지 222초 걸리던것을 애자일한 협업과정을 "
+    f"거쳐 디비생성, 배치사용등의 필요성을 느끼고 개선하여 응답속도를 26초까지 향상함.*\n\n"
+)
+
+# testing용
+ABOUTME_TECHSTACK_PROMPT = (
+    "안녕하세요! **’Comfort-Zone에서 벗어나 끊임없이 도전을 하는 개발자’** 입니다."
+    "- Self-Motivation: 어떤 일이든 관심이 생기면 망설임 없이 도전하여 실행에 옮깁니다."
+    "- Optimization-Driven: 코드 한 줄 까지도 성능 최적화에 집중하여 시스템의 효율성과 비즈니스 가치를 극대화합니다."
+    "- Collaborative-Growth: 개인적인 성장을 넘어서, 함께 공유하며 발전하는 문화를 추구합니다."
 )

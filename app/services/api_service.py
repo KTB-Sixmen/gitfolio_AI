@@ -1,6 +1,6 @@
 from app.dto.resume_dto import Project
 from app.services.github_service import get_combined_pr_text, get_combined_commit_diffs, get_commit_dates, clone_and_extract_files, delete_cloned_repo_from_url
-from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson
+from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson, generate_aboutme_techstack
 from app.services.data_service import save_summaries_to_file
 from app.config.settings import settings
 import logging
@@ -28,6 +28,9 @@ def process_repository(repo_url, githubID, githubName, requirements):
 
         # 7. 다운된 레포지토리 삭제
         delete_cloned_repo_from_url(repo_url)
+
+        # 긴버전뒤에 요약본 추가해서 리턴
+        project_summary += f"\n\n### 프로젝트 요약\n {simplified_summary.projectDescription}**"
 
         # Project DTO 형태로 변환
         project_summary = Project(
@@ -76,7 +79,6 @@ def create_project_summary(code_summary, pr_summary, commit_summary, githubID, r
 
 # 프로젝트 요약을 간단한 형태로 변환
 def simplify_project_info(project_summary, requirements):
-    """프로젝트 요약을 간단히 변환하고, 시작/마감 날짜 정보 가져오기"""
     simplified_summary = simplify_project_summary_byJson(project_summary, settings.openai_api_key, requirements, prompt=settings.simplify_project_prompt)
     return simplified_summary
 
@@ -86,8 +88,5 @@ def create_repo_start_end_date(repo_url):
     return first_commit_date, latest_commit_date
 
 # techStack과 aboutMe 생성
-def create_aboutme_techstack():
-    return {
-        "techStack": ["Python", "OpenAI GPT", "FastAPI"], 
-        "aboutMe": "안녕하세요! ‘Comfort-Zone에서 벗어나 끊임없이 도전을 하는 개발자’ 조일민입니다."
-    }
+def create_aboutme_techstack(project_summaries):
+    return generate_aboutme_techstack(project_summaries, settings.openai_api_key, prompt=settings.aboutme_techstack_prompt)

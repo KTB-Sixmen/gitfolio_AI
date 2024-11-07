@@ -28,12 +28,12 @@ async def generate_resume(request: ResumeRequest):
             return {"error": f"Error processing repositories: {str(e)}"}
     
     # aboutme techstack 생성
-    aboutme_techstack = create_aboutme_techstack()
+    aboutme_techstack = create_aboutme_techstack(project_summaries)
 
     # 최종 이력서 응답 생성
     resume_response = ResumeResponse(
         projects=project_summaries,
-        techStack=aboutme_techstack["techStack"],
-        aboutMe=aboutme_techstack["aboutMe"]
+        techStack=aboutme_techstack.techStack,
+        aboutMe=aboutme_techstack.aboutMe
     )
     return resume_response

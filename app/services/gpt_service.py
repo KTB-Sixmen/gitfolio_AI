@@ -1,6 +1,6 @@
 from openai import OpenAI
 from app.config.settings import settings
-from app.dto.resume_dto import GptProject
+from app.dto.resume_dto import GptProject, GptAboutmeTechstack
 import tiktoken 
 
 # GPT를 사용한 요약 함수
@@ -161,7 +161,7 @@ def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, 
                         "Please use the format to structure the summary based on the text provided(sample text). But, Do not use the context in the format. only use this in the structure and how to write the sentence."
                     )
                 },
-                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
+                {"role": "assistant", "content": f"focus on {requirements}"}
             ],
             max_tokens=settings.max_output_tokens,
             response_format=GptProject,
@@ -176,3 +176,39 @@ def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, 
     except Exception as e:
         print(f"An error occurred while simplifying the summary: {e}")
         return GptProject(projectName="", skillSet="", projectDescription="")
+
+# aboutMe, techStack 생성하기 Json형태
+def generate_aboutme_techstack(project_summaries, openai_api_key, prompt=settings.aboutme_techstack_prompt) -> GptAboutmeTechstack:
+    try:
+        # 요약 요청
+        print("Generating about me, techStack...")
+         # 모든 skillSet과 projectDescription을 리스트와 문자열로 결합하여 techStack 및 aboutMe 생성
+        skillsets = [skill.strip() for project in project_summaries for skill in project.skillSet.split(",")]
+        project_descriptions = "\n\n".join([project.projectDescription for project in project_summaries])
+
+
+        # beta, parse형태로 구성됨. 주기적으로 공식문서 업데이트 확인할것
+        client = OpenAI(api_key=openai_api_key)
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+               {"role": "system", "content": "As a senior developer, review the provided project summaries to generate `aboutMe` and `techStack`. Create concise summaries in Korean."},
+                {"role": "user", "content": (
+                    f"1. For `techStack`, analyze the following skillsets to identify the core skills and technologies frequently used by the developer:\n\n{skillsets}.\n\n"
+                    f"2. For `aboutMe`, use the following project descriptions to create a cohesive summary describing what kinds of persons:\n\n{project_descriptions}.\n\n"
+                )},
+                {"role": "assistant", "content": f"Sample summary format: {prompt}. Use this format to organize the generated content based on the provided text without including sample data itself."}
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=GptAboutmeTechstack,
+        )
+
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+
+        # GptAboutmeTechstack 객체로 반환
+        return response_text
+
+    except Exception as e:
+        print(f"Error during aboutme, techStack: {e}")
+        return GptAboutmeTechstack(techStack=[], aboutMe="")
