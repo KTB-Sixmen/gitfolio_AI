@@ -1,6 +1,7 @@
+from typing import List
 from pydantic_settings import BaseSettings
-from app.config.constant import GPT_MODEL, MAX_TOTAL_TOKENS, PROMPT_TOKEN_RESERVE, MAX_OUTPUT_TOKENS, MAX_CONTENT_TOKENS, DEFAULT_DATA, CODE_DATA, PR_DATA, COMMIT_DATA, PROJECT_DATA, REPO_DIRECTORY 
-from app.prompts.resume_prompt import CODE_SUMMARY_PROMPT, PR_SUMMARY_PROMPT, COMMIT_DIFF_SUMMARY_PROMPT, FINAL_SUMMARY_PROMPT, FINAL_PROJECT_PROMPT, SIMPLIFY_PROJECT_PROMPT
+from app.config.constant import GPT_MODEL, MAX_TOTAL_TOKENS, PROMPT_TOKEN_RESERVE, MAX_OUTPUT_TOKENS, MAX_CONTENT_TOKENS, DEFAULT_DATA, CODE_DATA, PR_DATA, COMMIT_DATA, PROJECT_DATA, REPO_DIRECTORY, FILE_EXTENSIONS
+from app.prompts.resume_prompt import CODE_SUMMARY_PROMPT, PR_SUMMARY_PROMPT, COMMIT_DIFF_SUMMARY_PROMPT, FINAL_SUMMARY_PROMPT, FINAL_PROJECT_PROMPT, SIMPLIFY_PROJECT_PROMPT, ABOUTME_TECHSTACK_PROMPT
 
 class Settings(BaseSettings):
     # API 키
@@ -18,6 +19,9 @@ class Settings(BaseSettings):
     max_output_tokens: int = MAX_OUTPUT_TOKENS
     max_content_tokens: int = MAX_CONTENT_TOKENS
 
+    # 깃헙데이터 읽을 코드파일 익스텐션
+    file_extensions: List[str] = FILE_EXTENSIONS
+
     # 데이터 저장 위치
     default_data: str = DEFAULT_DATA
     code_data: str = CODE_DATA
@@ -33,6 +37,7 @@ class Settings(BaseSettings):
     final_summary_prompt: str = FINAL_SUMMARY_PROMPT
     final_project_prompt: str = FINAL_PROJECT_PROMPT
     simplify_project_prompt: str = SIMPLIFY_PROJECT_PROMPT
+    aboutme_techstack_prompt: str = ABOUTME_TECHSTACK_PROMPT
 
     class Config:
         env_file = ".env"

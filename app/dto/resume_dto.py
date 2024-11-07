@@ -24,8 +24,14 @@ class GptProject(BaseModel):
     skillSet: str
     projectDescription: str
 
+# aboutme, techstack, json형태
+class GptAboutmeTechstack(BaseModel):
+    techStack: List[str]
+    aboutMe: str
+
 # 응답 데이터 모델 - 전체 이력서
 class ResumeResponse(BaseModel):
     projects: List[Project]
     techStack: List[str]
     aboutMe: str
+
