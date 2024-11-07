@@ -26,6 +26,9 @@ def process_repository(repo_url, githubID, githubName):
         # 6. 시작 및 마감 날짜 정보 가져오기
         first_commit_date, latest_commit_date = create_repo_start_end_date(repo_url)
 
+        # 7. 다운된 레포지토리 삭제
+        delete_cloned_repo_from_url(repo_url)
+
         # Project DTO 형태로 변환
         project_summary = Project(
             projectName=simplified_summary.projectName, 
