@@ -1,6 +1,6 @@
 from app.dto.resume_dto import Project
 from app.services.github_service import get_combined_pr_text, get_combined_commit_diffs, get_commit_dates, clone_and_extract_files, delete_cloned_repo_from_url
-from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, simplify_project_summary_byJson
+from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson
 from app.services.data_service import save_summaries_to_file
 from app.config.settings import settings
 import logging
@@ -20,7 +20,7 @@ def process_repository(repo_url, githubID, githubName, requirements):
         # 4. 프로젝트 요약 생성
         project_summary = create_project_summary(final_code_summary, final_pr_summary, final_commit_summary, githubID, repo_url, requirements)
 
-        # 5. 프로젝트 요약을 간단히 변환
+        # # 5. 프로젝트 요약을 간단히 변환
         simplified_summary = simplify_project_info(project_summary, requirements)
 
         # 6. 시작 및 마감 날짜 정보 가져오기
@@ -35,7 +35,7 @@ def process_repository(repo_url, githubID, githubName, requirements):
             projectStartedAt=first_commit_date, 
             projectEndedAt=latest_commit_date,  
             skillSet=simplified_summary.skillSet,
-            projectDescription=simplified_summary.projectDescription,
+            projectDescription=project_summary,
             repoLink=repo_url
         )
         return project_summary
