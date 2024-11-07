@@ -87,6 +87,7 @@ def get_combined_pr_text(gh_token, githubID, repo_url):
         print(f"Error while fetching and combining pull requests: {e}")
         return ""  # 오류 발생 시 빈 문자열 반환
 
+# 사용자가 개발 도중에 이름이나, 닉네임을 변경하게되면 두개의 이름을 어떻게 기억하지?
 # 사용자가 작성한 모든 커밋의 diff 가져와서 문자열로 결합하는 함수
 def get_combined_commit_diffs(gh_token, githubID, githubName, repo_url, clone_dir=settings.repo_directory):
     """

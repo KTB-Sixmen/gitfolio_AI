@@ -19,22 +19,21 @@ async def generate_resume(request: ResumeRequest):
             loop.run_in_executor(executor, process_repository, repo_url, request.githubID, request.githubName)
             for repo_url in request.selectedRepo
         ]
-        
-    #     try:
-    #         # 하나라도 실패 시 즉시 예외를 발생시키고 에러 메시지를 리턴
-    #         project_summaries = await asyncio.gather(*tasks)
+        try:
+            # 하나라도 실패 시 즉시 예외를 발생시키고 에러 메시지를 리턴
+            project_summaries = await asyncio.gather(*tasks)
 
-    #     except Exception as e:
-    #         logging.error(f"Error processing repositories: {e}")
-    #         return {"error": f"Error processing repositories: {str(e)}"}
+        except Exception as e:
+            logging.error(f"Error processing repositories: {e}")
+            return {"error": f"Error processing repositories: {str(e)}"}
     
-    # # aboutme techstack 생성
-    # aboutme_techstack = create_aboutme_techstack()
+    # aboutme techstack 생성
+    aboutme_techstack = create_aboutme_techstack()
 
-    # # 최종 이력서 응답 생성
-    # resume_response = ResumeResponse(
-    #     projects=project_summaries,
-    #     techStack=aboutme_techstack["techStack"],
-    #     aboutMe=aboutme_techstack["aboutMe"]
-    # )
+    # 최종 이력서 응답 생성
+    resume_response = ResumeResponse(
+        projects=project_summaries,
+        techStack=aboutme_techstack["techStack"],
+        aboutMe=aboutme_techstack["aboutMe"]
+    )
     return resume_response
