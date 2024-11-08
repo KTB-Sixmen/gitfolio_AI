@@ -60,12 +60,17 @@ jobs:
         run: |
           INSTANCE_ID=$(aws ec2 describe-instances \
             --filters \
-              "Name=tag:Service,Values=back" \
-              "Name=tag:Name,Values=Gitfolio ai" \
+              "Name=tag:Service,Values=ai" \           # 'back' -> 'ai'
+              "Name=tag:Name,Values=Gitfolio AI" \     # 'Gitfolio ai' -> 'Gitfolio AI'
               "Name=tag:Environment,Values=dev" \
               "Name=instance-state-name,Values=running" \
             --query "Reservations[*].Instances[*].InstanceId" \
             --output text)
+          if [ -z "$INSTANCE_ID" ]; then
+            echo "No matching EC2 instance found!"
+            exit 1
+          fi
+          echo "Found instance ID: $INSTANCE_ID"
           echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
 
       - name: Install Session Manager Plugin
