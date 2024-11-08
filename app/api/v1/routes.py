@@ -26,9 +26,10 @@ async def generate_resume(request: ResumeRequest):
         except Exception as e:
             logging.error(f"Error processing repositories: {e}")
             return {"error": f"Error processing repositories: {str(e)}"}
-    
+
     # aboutme techstack 생성
     aboutme_techstack = create_aboutme_techstack(project_summaries)
+
 
     # 최종 이력서 응답 생성
     resume_response = ResumeResponse(

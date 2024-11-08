@@ -3,36 +3,42 @@ from app.services.github_service import get_combined_pr_text, get_combined_commi
 from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson, generate_aboutme_techstack
 from app.services.data_service import save_summaries_to_file
 from app.config.settings import settings
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 
-# 레포지토리를 처리하고 요약을 반환하는 함수
+# 병렬로 레포지토리를 처리하고 요약을 반환하는 함수
 def process_repository(repo_url, githubID, githubName, requirements):
     try:
-        # 1. 코드 파일 클론 및 요약 생성
-        final_code_summary = process_code_files(repo_url, githubID, requirements)
+        with ThreadPoolExecutor() as executor:
+            all_code = clone_and_extract_files(repo_url)
+            # 1, 2, 3번 작업을 병렬로 실행
+            futures = {
+                executor.submit(process_code_files, all_code, repo_url, githubID, requirements): 'code_summary',
+                executor.submit(process_pr_text, repo_url, githubID, requirements): 'pr_summary',
+                executor.submit(process_commit_diffs, repo_url, githubID, githubName, requirements): 'commit_summary'
+            }
+            results = {}
+            for future in as_completed(futures):
+                key = futures[future]
+                try:
+                    results[key] = future.result()
+                except Exception as e:
+                    logging.error(f"Error in {key}: {e}")
+                    raise  # 에러를 다시 발생시켜 상위에서 예외 처리
 
-        # 2. PR 요약 생성
-        final_pr_summary = process_pr_text(repo_url, githubID, requirements)
+        # 병렬처리 결과 할당
+        final_code_summary = results['code_summary']
+        final_pr_summary = results['pr_summary']
+        final_commit_summary = results['commit_summary']
 
-        # 3. 커밋 diff 요약 생성
-        final_commit_summary = process_commit_diffs(repo_url, githubID, githubName, requirements)
-
-        # 4. 프로젝트 요약 생성
+        # 이후 작업들
         project_summary = create_project_summary(final_code_summary, final_pr_summary, final_commit_summary, githubID, repo_url, requirements)
-
-        # # 5. 프로젝트 요약을 간단히 변환
         simplified_summary = simplify_project_info(project_summary, requirements)
-
-        # 6. 시작 및 마감 날짜 정보 가져오기
         first_commit_date, latest_commit_date = create_repo_start_end_date(repo_url)
-
-        # 7. 다운된 레포지토리 삭제
         delete_cloned_repo_from_url(repo_url)
 
-        # 긴버전뒤에 요약본 추가해서 리턴
         project_summary += f"\n\n### 프로젝트 요약\n {simplified_summary.projectDescription}**"
 
-        # Project DTO 형태로 변환
         project_summary = Project(
             projectName=simplified_summary.projectName, 
             projectStartedAt=first_commit_date, 
@@ -42,14 +48,13 @@ def process_repository(repo_url, githubID, githubName, requirements):
             repoLink=repo_url
         )
         return project_summary
-    
+
     except Exception as e:
         logging.error(f"Error in processing repository {repo_url}: {e}")
         raise  # 에러를 다시 발생시켜 상위에서 예외 처리
 
 # 클론하여 코드 파일을 가져오고 요약을 생성하는 함수
-def process_code_files(repo_url, githubID, requirements):
-    all_code = clone_and_extract_files(repo_url)
+def process_code_files(all_code, repo_url, githubID, requirements):
     initial_summary = slice_and_summarize(all_code, settings.openai_api_key, requirements, max_output_tokens=settings.max_output_tokens, prompt=settings.code_summary_prompt)
     final_code_summary = final_summarization(initial_summary, settings.openai_api_key, requirements, max_output_tokens=settings.max_output_tokens, prompt=settings.final_summary_prompt)
     save_summaries_to_file(final_code_summary, githubID, repo_url, output_folder=settings.code_data)
