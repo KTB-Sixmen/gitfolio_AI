@@ -78,7 +78,7 @@ jobs:
           aws ssm start-session \
             --target "${{ steps.get-instance.outputs.instance_id }}" \
             --document-name AWS-StartInteractiveCommand \
-            --parameters 'command=["sudo -i && \
+            --parameters command="sudo -i && \
               docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }} && \
               docker pull ${{ secrets.DOCKER_REPO }}:dev && \
               docker stop fastapi-app || true && \
@@ -90,4 +90,4 @@ jobs:
                 -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
                 -e HOST=${{ secrets.HOST }} \
                 -e PORT=${{ secrets.PORT }} \
-                ${{ secrets.DOCKER_REPO }}:dev"]'
+                ${{ secrets.DOCKER_REPO }}:dev"
