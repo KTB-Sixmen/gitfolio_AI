@@ -60,8 +60,8 @@ jobs:
         run: |
           INSTANCE_ID=$(aws ec2 describe-instances \
             --filters \
-              "Name=tag:Service,Values=ai" \           # 'back' -> 'ai'
-              "Name=tag:Name,Values=Gitfolio AI" \     # 'Gitfolio ai' -> 'Gitfolio AI'
+              "Name=tag:Service,Values=ai" \
+              "Name=tag:Name,Values=Gitfolio AI" \
               "Name=tag:Environment,Values=dev" \
               "Name=instance-state-name,Values=running" \
             --query "Reservations[*].Instances[*].InstanceId" \
