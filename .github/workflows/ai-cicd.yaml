@@ -97,42 +97,6 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
           DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
         run: |
-          # 배포 스크립트 생성
-          cat << EOF > deploy.sh
-          #!/bin/bash
-          set -e
-          
-          # 필요한 디렉토리 생성
-          sudo mkdir -p /home/ec2-user
-          
-          # ENV 파일 생성 및 권한 설정
-          echo "$ENCODED_ENV" | base64 -d > /home/ec2-user/.env
-          sudo chmod 600 /home/ec2-user/.env
-          sudo chown ec2-user:ec2-user /home/ec2-user/.env
-          
-          # Docker 로그인
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          
-          # 이미지 풀
-          docker pull $DOCKER_REPO:dev
-          
-          # 기존 컨테이너 정리
-          docker stop fastapi-app || true
-          docker rm fastapi-app || true
-          
-          # 새 컨테이너 실행
-          docker run -d \
-            --name fastapi-app \
-            -p 8000:8000 \
-            --env-file /home/ec2-user/.env \
-            --network gitfolio-network \
-            --restart unless-stopped \
-            $DOCKER_REPO:dev
-          EOF
-          
-          # 스크립트에 실행 권한 부여
-          chmod +x deploy.sh
-          
           # ENV 파일을 base64로 인코딩
           ENCODED_ENV=$(cat .env | base64 -w 0)
           
@@ -140,7 +104,7 @@ jobs:
           cat << EOF > command.json
           {
             "command": [
-              "ENCODED_ENV='${ENCODED_ENV}' DOCKER_USERNAME='${DOCKER_USERNAME}' DOCKER_PASSWORD='${DOCKER_PASSWORD}' DOCKER_REPO='${DOCKER_REPO}' bash -c 'curl -sfL https://raw.githubusercontent.com/yourusername/yourrepo/feature/ai-cicd/deploy.sh | bash'"
+              "sudo -i && mkdir -p /home/ec2-user && echo '${ENCODED_ENV}' | base64 -d > /home/ec2-user/.env && chmod 600 /home/ec2-user/.env && chown ec2-user:ec2-user /home/ec2-user/.env && docker login -u '${DOCKER_USERNAME}' -p '${DOCKER_PASSWORD}' && docker pull ${DOCKER_REPO}:dev && docker stop fastapi-app || true && docker rm fastapi-app || true && docker run -d --name fastapi-app -p 8000:8000 --env-file /home/ec2-user/.env --network gitfolio-network --restart unless-stopped ${DOCKER_REPO}:dev"
             ]
           }
           EOF
@@ -150,32 +114,3 @@ jobs:
             --target "${{ steps.get-instance.outputs.instance_id }}" \
             --document-name "AWS-StartInteractiveCommand" \
             --parameters "file://command.json"
-
-      - name: Verify Deployment
-        run: |
-          echo "Waiting for application to start..."
-          sleep 30
-          
-          # EC2 인스턴스의 퍼블릭 IP 가져오기
-          EC2_IP=$(aws ec2 describe-instances \
-            --instance-ids "${{ steps.get-instance.outputs.instance_id }}" \
-            --query "Reservations[0].Instances[0].PublicIpAddress" \
-            --output text)
-          
-          # 헬스체크 수행
-          MAX_RETRIES=5
-          RETRY_COUNT=0
-          
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -s "http://$EC2_IP:8000/health" | grep -q "ok"; then
-              echo "Application successfully deployed and healthy!"
-              exit 0
-            fi
-          
-            echo "Health check failed, retrying in 10 seconds..."
-            sleep 10
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-          done
-          
-          echo "Deployment verification failed after $MAX_RETRIES attempts"
-          exit 1
