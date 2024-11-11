@@ -97,24 +97,18 @@ jobs:
       - name: Deploy to EC2 using SSM
         env:
           ENV_CONTENT: ${{ secrets.ENV }}
+          DOCKER_USERNAME: ${{ env.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ env.DOCKERHUB_PASSWORD }}
+          DOCKER_REPO: ${{ env.DOCKER_REPO }}
         run: |
-          ESCAPED_ENV=$(echo "$ENV_CONTENT" | sed 's/"/\\"/g')
+          # ENV 내용을 base64로 인코딩
+          ENCODED_ENV=$(echo "$ENV_CONTENT" | base64)
+          
+          # 한 줄로 명령어 구성
+          COMMAND='sudo -i && mkdir -p /home/ec2-user && echo "'$ENCODED_ENV'" | base64 -d > /home/ec2-user/.env && chmod 600 /home/ec2-user/.env && chown ec2-user:ec2-user /home/ec2-user/.env && docker login -u "'$DOCKER_USERNAME'" -p "'$DOCKER_PASSWORD'" && docker pull '$DOCKER_REPO':dev && docker stop fastapi-app || true && docker rm fastapi-app || true && docker run -d --name fastapi-app -p 8000:8000 --env-file /home/ec2-user/.env --network gitfolio-network --restart unless-stopped '$DOCKER_REPO':dev'
+          
+          # AWS SSM 명령어 실행
           aws ssm start-session \
             --target "${{ steps.get-instance.outputs.instance_id }}" \
             --document-name "AWS-StartInteractiveCommand" \
-            --parameters '{"command":["sudo -i && \
-              mkdir -p /home/ec2-user && \
-              echo \"'"$ESCAPED_ENV"'\" > /home/ec2-user/.env && \
-              chmod 600 /home/ec2-user/.env && \
-              chown ec2-user:ec2-user /home/ec2-user/.env && \
-              docker login -u ${{ env.DOCKERHUB_USERNAME }} -p ${{ env.DOCKERHUB_PASSWORD }} && \
-              docker pull ${{ env.DOCKER_REPO }}:dev && \
-              docker stop fastapi-app || true && \
-              docker rm fastapi-app || true && \
-              docker run -d \
-                --name fastapi-app \
-                -p 8000:8000 \
-                --env-file /home/ec2-user/.env \
-                --network gitfolio-network \
-                --restart unless-stopped \
-                ${{ env.DOCKER_REPO }}:dev"]}'
+            --parameters "{\"command\":[\"$COMMAND\"]}"
