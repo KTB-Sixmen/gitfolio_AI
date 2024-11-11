@@ -7,6 +7,9 @@ PROMPT_TOKEN_RESERVE = 1000      # 프롬프트에 사용할 토큰을 남겨두
 MAX_OUTPUT_TOKENS = 4000         # 최대 아웃풋 토큰
 MAX_CONTENT_TOKENS = MAX_TOTAL_TOKENS - PROMPT_TOKEN_RESERVE - MAX_OUTPUT_TOKENS  # 최대 컨텐츠 토큰 수
 
+# 깃헙데이터 읽을 코드파일 익스텐션
+FILE_EXTENSIONS = ['.py', '.js', '.java', '.cpp', '.c', '.go', '.rb', '.ts', '.html', '.md' ]
+
 # 데이터 저장 위치
 DEFAULT_DATA = 'app/data'
 CODE_DATA = 'app/data/code'
