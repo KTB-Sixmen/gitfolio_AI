@@ -3,7 +3,7 @@ name: FastAPI Test CI/CD Pipeline
 on:
   push:
     branches:
-#      - develop  # feature/ai-cicd 브랜치에 푸시될 때 실행
+      - main  # feature/ai-cicd 브랜치에 푸시될 때 실행
 
 jobs:
   build:
