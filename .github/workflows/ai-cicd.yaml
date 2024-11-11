@@ -100,7 +100,7 @@ jobs:
           DOCKER_USERNAME: ${{ env.DOCKERHUB_USERNAME }}
           DOCKER_PASSWORD: ${{ env.DOCKERHUB_PASSWORD }}
           DOCKER_REPO: ${{ env.DOCKER_REPO }}
-        run: |
+        run:
           # ENV 내용을 base64로 인코딩
           ENCODED_ENV=$(echo "$ENV_CONTENT" | base64)
           
