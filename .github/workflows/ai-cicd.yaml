@@ -3,7 +3,7 @@ name: FastAPI CI/CD Pipeline
 on:
   push:
     branches:
-      - feature/ai-cicd
+      - develop
 
 jobs:
   build:
