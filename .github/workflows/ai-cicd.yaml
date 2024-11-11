@@ -42,6 +42,7 @@ jobs:
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_PASSWORD }}
+          ecr: false
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
@@ -94,22 +95,28 @@ jobs:
           sudo dpkg -i session-manager-plugin.deb
 
       - name: Deploy to EC2 using SSM
+        env:
+          ENV_CONTENT: ${{ secrets.ENV }}
         run: |
+          COMMAND="set -e && \
+          sudo -i && \
+          mkdir -p /home/ec2-user && \
+          echo \"$ENV_CONTENT\" > /home/ec2-user/.env && \
+          chmod 600 /home/ec2-user/.env && \
+          chown ec2-user:ec2-user /home/ec2-user/.env && \
+          docker login -u ${{ env.DOCKERHUB_USERNAME }} -p ${{ env.DOCKERHUB_PASSWORD }} && \
+          docker pull ${{ env.DOCKER_REPO }}:dev && \
+          docker stop fastapi-app || true && \
+          docker rm fastapi-app || true && \
+          docker run -d \
+            --name fastapi-app \
+            -p 8000:8000 \
+            --env-file /home/ec2-user/.env \
+            --network gitfolio-network \
+            --restart unless-stopped \
+            ${{ env.DOCKER_REPO }}:dev"
+
           aws ssm start-session \
             --target "${{ steps.get-instance.outputs.instance_id }}" \
             --document-name "AWS-StartInteractiveCommand" \
-            --parameters command=["
-              set -e && \
-              sudo -i && \
-              docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD} && \
-              docker pull ${DOCKER_REPO}:dev && \
-              docker stop fastapi-app || true && \
-              docker rm fastapi-app || true && \
-              docker run -d \
-                --name fastapi-app \
-                -p 8000:8000 \
-                --env-file <(echo '${{ secrets.ENV }}') \
-                --network gitfolio-network \
-                --restart unless-stopped \
-                ${DOCKER_REPO}:dev
-            "]
+            --parameters command="[$COMMAND]"
