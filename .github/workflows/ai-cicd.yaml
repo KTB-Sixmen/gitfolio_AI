@@ -26,11 +26,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Extract Docker credentials
+        run: |
+          echo "${{ secrets.ENV }}" > .env
+          source .env
+          echo "DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}" >> $GITHUB_ENV
+          echo "DOCKERHUB_PASSWORD=${DOCKERHUB_PASSWORD}" >> $GITHUB_ENV
+          echo "DOCKER_REPO=${DOCKER_REPO}" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
+        env:
+          DOCKERHUB_USERNAME: ${{ env.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ env.DOCKERHUB_PASSWORD }}
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_PASSWORD }}
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
@@ -39,20 +50,24 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKER_REPO }}:dev
-          build-args: |
-            HOST=${{ secrets.HOST }}
-            PORT=${{ secrets.PORT }}
+          tags: ${{ env.DOCKER_REPO }}:dev
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Set AWS Credentials
+        run: |
+          echo "${{ secrets.ENV }}" > .env
+          source .env
+          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" >> $GITHUB_ENV
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
       - name: Get EC2 instance ID
@@ -80,25 +95,21 @@ jobs:
 
       - name: Deploy to EC2 using SSM
         run: |
-          # Create a temporary file with the environment variables
-          echo '${{ secrets.ENV }}' > env_temp
-          
-          # Deploy using SSM with the environment variables
           aws ssm start-session \
             --target "${{ steps.get-instance.outputs.instance_id }}" \
             --document-name "AWS-StartInteractiveCommand" \
             --parameters command=["
               set -e && \
               sudo -i && \
-              docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }} && \
-              docker pull ${{ secrets.DOCKER_REPO }}:dev && \
+              docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD} && \
+              docker pull ${DOCKER_REPO}:dev && \
               docker stop fastapi-app || true && \
               docker rm fastapi-app || true && \
               docker run -d \
                 --name fastapi-app \
-                -p ${{ secrets.PORT }}:8000 \
+                -p 8000:8000 \
                 --env-file <(echo '${{ secrets.ENV }}') \
                 --network gitfolio-network \
                 --restart unless-stopped \
-                ${{ secrets.DOCKER_REPO }}:dev
+                ${DOCKER_REPO}:dev
             "]
