@@ -3,7 +3,7 @@ name: FastAPI CI/CD Pipeline
 on:
   push:
     branches:
-      - develop
+      - feature/ai-cicd
 
 jobs:
   build:
@@ -55,6 +55,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
+      - name: Create env file
+        run: |
+          echo "${{ secrets.ENV }}" > .env
+
       - name: Get EC2 instance ID
         id: get-instance
         run: |
@@ -80,19 +84,10 @@ jobs:
 
       - name: Deploy to EC2 using SSM
         run: |
+          # Source the environment variables
+          source .env
+          
           aws ssm start-session \
             --target "${{ steps.get-instance.outputs.instance_id }}" \
-            --document-name AWS-StartInteractiveCommand \
-            --parameters command="sudo -i && \
-              docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }} && \
-              docker pull ${{ secrets.DOCKER_REPO }}:dev && \
-              docker stop fastapi-app || true && \
-              docker rm fastapi-app || true && \
-              docker run -d \
-                --name fastapi-app \
-                -p ${{ secrets.PORT }}:8000 \
-                -e GH_TOKEN=${{ secrets.GH_TOKEN }} \
-                -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-                -e HOST=${{ secrets.HOST }} \
-                -e PORT=${{ secrets.PORT }} \
-                ${{ secrets.DOCKER_REPO }}:dev"
+            --document-name "AWS-StartInteractiveCommand" \
+            --parameters "{\"command\":[\"sudo -i && docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }} && docker pull ${{ secrets.DOCKER_REPO }}:dev && docker stop fastapi-app || true && docker rm fastapi-app || true && docker run -d --name fastapi-app -p ${{ secrets.PORT }}:8000 --env-file .env ${{ secrets.DOCKER_REPO }}:dev\"]}"
