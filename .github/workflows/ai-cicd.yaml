@@ -98,25 +98,23 @@ jobs:
         env:
           ENV_CONTENT: ${{ secrets.ENV }}
         run: |
-          COMMAND="set -e && \
-          sudo -i && \
-          mkdir -p /home/ec2-user && \
-          echo \"$ENV_CONTENT\" > /home/ec2-user/.env && \
-          chmod 600 /home/ec2-user/.env && \
-          chown ec2-user:ec2-user /home/ec2-user/.env && \
-          docker login -u ${{ env.DOCKERHUB_USERNAME }} -p ${{ env.DOCKERHUB_PASSWORD }} && \
-          docker pull ${{ env.DOCKER_REPO }}:dev && \
-          docker stop fastapi-app || true && \
-          docker rm fastapi-app || true && \
-          docker run -d \
-            --name fastapi-app \
-            -p 8000:8000 \
-            --env-file /home/ec2-user/.env \
-            --network gitfolio-network \
-            --restart unless-stopped \
-            ${{ env.DOCKER_REPO }}:dev"
-
+          ESCAPED_ENV=$(echo "$ENV_CONTENT" | sed 's/"/\\"/g')
           aws ssm start-session \
             --target "${{ steps.get-instance.outputs.instance_id }}" \
             --document-name "AWS-StartInteractiveCommand" \
-            --parameters command="[$COMMAND]"
+            --parameters '{"command":["sudo -i && \
+              mkdir -p /home/ec2-user && \
+              echo \"'"$ESCAPED_ENV"'\" > /home/ec2-user/.env && \
+              chmod 600 /home/ec2-user/.env && \
+              chown ec2-user:ec2-user /home/ec2-user/.env && \
+              docker login -u ${{ env.DOCKERHUB_USERNAME }} -p ${{ env.DOCKERHUB_PASSWORD }} && \
+              docker pull ${{ env.DOCKER_REPO }}:dev && \
+              docker stop fastapi-app || true && \
+              docker rm fastapi-app || true && \
+              docker run -d \
+                --name fastapi-app \
+                -p 8000:8000 \
+                --env-file /home/ec2-user/.env \
+                --network gitfolio-network \
+                --restart unless-stopped \
+                ${{ env.DOCKER_REPO }}:dev"]}'
