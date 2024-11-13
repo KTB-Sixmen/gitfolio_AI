@@ -1,48 +1,12 @@
-name: FastAPI Test CI/CD Pipeline
+name: FastAPI Test Deployment
 
 on:
   push:
     branches:
-      - main  # feature/ai-cicd 브랜치에 푸시될 때 실행
+      - feature/ai-cicd
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --no-cache-dir -r requirements.txt
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME_TEST }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD_TEST }}
-
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: ${{ secrets.DOCKER_REPO_TEST }}:test
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to EC2
@@ -53,19 +17,23 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY_TEST }}
           port: 22
           script: |
-            # 최신 test 이미지 풀
-            docker pull ${{ secrets.DOCKER_REPO_TEST }}:test
-
-            # 기존 테스트 컨테이너 중지 및 제거
+            # 도커 로그인
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+            
+            # 최신 이미지 풀
+            docker pull ${{ secrets.DOCKER_REPO }}:test
+            
+            # 기존 컨테이너 중지 및 제거
             docker stop fastapi-app-test || true
             docker rm fastapi-app-test || true
-
-            # 새 테스트 컨테이너 실행
+            
+            # 새 컨테이너 실행
             docker run -d \
               --name fastapi-app-test \
               -p 8000:8000 \
-              -e GH_TOKEN=${{ secrets.GH_TOKEN_TEST }} \
-              -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_TEST }} \
-              -e HOST=0.0.0.0 \
-              -e PORT=8000 \
-              ${{ secrets.DOCKER_REPO_TEST }}:test
+              -e GH_TOKEN='${{ secrets.GH_TOKEN }}' \
+              -e OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}' \
+              -e HOST='${{ secrets.HOST }}' \
+              -e PORT='${{ secrets.PORT }}' \
+              --restart unless-stopped \
+              ${{ secrets.DOCKER_REPO }}:test
