@@ -4,6 +4,10 @@ from app.services.api_service import process_repository, create_aboutme_techstac
 from concurrent.futures import ProcessPoolExecutor
 import asyncio
 import logging
+from app.services.stack_service import generate_techstack
+from app.services.gpt_service import generate_aboutme
+from app.config.settings import settings
+
 
 router = APIRouter()
 
@@ -27,14 +31,19 @@ async def generate_resume(request: ResumeRequest):
             logging.error(f"Error processing repositories: {e}")
             return {"error": f"Error processing repositories: {str(e)}"}
 
-    # aboutme techstack 생성
-    aboutme_techstack = create_aboutme_techstack(project_summaries)
+    # # aboutme techstack 생성
+    # aboutme_techstack = create_aboutme_techstack(project_summaries)
+    
+    # techstack 생성
+    techstack = generate_techstack(project_summaries)
+    aboutme = generate_aboutme(settings.openai_api_key)
 
 
     # 최종 이력서 응답 생성
     resume_response = ResumeResponse(
         projects=project_summaries,
-        techStack=aboutme_techstack.techStack,
-        aboutMe=aboutme_techstack.aboutMe
+        techStack=techstack,
+        aboutMe=aboutme
+        # aboutMe=aboutme_techstack.aboutMe
     )
     return resume_response

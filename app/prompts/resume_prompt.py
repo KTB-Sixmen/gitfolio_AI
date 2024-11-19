@@ -45,3 +45,19 @@ ABOUTME_TECHSTACK_PROMPT = (
     "- Optimization-Driven: 코드 한 줄 까지도 성능 최적화에 집중하여 시스템의 효율성과 비즈니스 가치를 극대화합니다."
     "- Collaborative-Growth: 개인적인 성장을 넘어서, 함께 공유하며 발전하는 문화를 추구합니다."
 )
+
+ABOUTME_PROMPT = (
+    "Provide a response by deriving 1-2 key descriptive words related to the given information, "
+    "then explain the meaning of those words as they relate to the applicant's traits or qualifications.\n\n"
+    "The final 'About Me' should consist of three concise points, each formatted as follows:\n"
+    "<English keyword>: <Korean explanation>\n"
+    "Example:\n"
+    "- Proactive Development: 필요한 미래를 앞당기기 위해 새로운 도전에 적극적으로 임합니다.\n"
+    "- Collaborative Growth: 서로의 역량을 극대화하며 함께 성장할 수 있는 환경을 만듭니다.\n"
+    "- Adaptive Thinking: 변화에 유연하게 대응하며 창의적인 접근 방식을 추구합니다."
+    "When writing the response:\n"
+        "1. Highlight the applicant's proactive attitude and problem-solving skills.\n"
+        "2. Ensure the tone remains professional, and the explanation is concise.\n"
+        "3. Use metaphorical or creative expressions to enhance engagement, avoiding direct repetition of the input text.\n"
+        "4. Ensure each point reflects the provided company values and GitHub data."
+)
