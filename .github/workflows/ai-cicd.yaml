@@ -64,25 +64,40 @@ jobs:
             echo "No instance IDs found. Exiting."
             exit 1
           fi
+          
+          # Create JSON parameter string
+          PARAMS=$(cat << EOF
+          {
+            "commands": [
+              "cd /home/ec2-user",
+              "echo 'OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}' > .env",
+              "echo 'GH_TOKEN=${{ secrets.GH_TOKEN }}' >> .env",
+              "echo 'HOST=${{ secrets.HOST }}' >> .env",
+              "echo 'PORT=${{ secrets.PORT }}' >> .env",
+              "chmod 600 .env",
+              "docker-compose down -v --rmi all",
+              "docker-compose pull",
+              "docker-compose up -d"
+            ],
+            "workingDirectory": [
+              "/home/ec2-user"
+            ]
+          }
+          EOF
+          )
+          
           COMMAND_OUTPUT=$(aws ssm send-command \
-            --instance-ids ${{ steps.get_instances.outputs.instance_ids }} \
+            --instance-ids "${{ steps.get_instances.outputs.instance_ids }}" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploying AI Server" \
-            --parameters '{
-              "commands":[
-                "cd /home/ec2-user",
-                "echo \"OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}\" > .env",
-                "echo \"GH_TOKEN=${{ secrets.GH_TOKEN }}\" >> .env",
-                "echo \"HOST=${{ secrets.HOST }}\" >> .env",
-                "echo \"PORT=${{ secrets.PORT }}\" >> .env",
-                "docker-compose down -v --rmi all",
-                "docker-compose pull",
-                "docker-compose up -d"
-              ],
-              "workingDirectory":["/home/ec2-user"]
-            }' \
+            --parameters "$PARAMS" \
             --timeout-seconds 600 \
             --region ap-northeast-2)
+          
+          echo "COMMAND_OUTPUT=$COMMAND_OUTPUT"
+          COMMAND_ID=$(echo "$COMMAND_OUTPUT" | jq -r '.Command.CommandId')
+          echo "COMMAND_ID=$COMMAND_ID"
+          echo "command_id=$COMMAND_ID" >> $GITHUB_OUTPUT
 
       # 8단계: 명령 실행 완료 대기
       - name: Wait for command to complete
