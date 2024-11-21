@@ -1,7 +1,11 @@
 from openai import OpenAI
 from app.config.settings import settings
-from app.dto.resume_dto import GptProject, GptAboutmeTechstack
+from app.dto.resume_dto import GptProject
+from app.services.github_service import get_github_profile_and_repos
 import tiktoken 
+import json
+import os
+import pprint
 
 # GPT를 사용한 요약 함수
 def summarize_text(text, openai_api_key, requirements, max_output_tokens, prompt):
@@ -176,39 +180,72 @@ def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, 
     except Exception as e:
         print(f"An error occurred while simplifying the summary: {e}")
         return GptProject(projectName="", skillSet="", projectDescription="")
-
-# aboutMe, techStack 생성하기 Json형태
-def generate_aboutme_techstack(project_summaries, openai_api_key, prompt=settings.aboutme_techstack_prompt) -> GptAboutmeTechstack:
+    
+# 어바웃미 생성    
+def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt) -> str:
     try:
         # 요약 요청
-        print("Generating about me, techStack...")
-         # 모든 skillSet과 projectDescription을 리스트와 문자열로 결합하여 techStack 및 aboutMe 생성
-        skillsets = [skill.strip() for project in project_summaries for skill in project.skillSet.split(",")]
-        project_descriptions = "\n\n".join([project.projectDescription for project in project_summaries])
+        print("Generating about me...")
+        
+        # 1. JSON 파일에서 회사 정보 읽기
+        json_file_path = os.path.join("/Users/eunma/Documents/GitHub/gitfolio_AI/app/data/dependencies/company_info.json")
+        with open(json_file_path, "r", encoding="utf-8") as f:
+            company_data = json.load(f)
+
+        # 2. 단 하나의 샘플 데이터만 있다고 가정하고 첫 번째 항목 사용
+        company_info = company_data["companies"][0]
+
+        # 프로젝트 설명 결합
+        # project_descriptions = "\n\n".join([project.projectDescription for project in project_summaries])
 
 
-        # beta, parse형태로 구성됨. 주기적으로 공식문서 업데이트 확인할것
+        # GitHub README 토큰 호출
+        github_readme, github_repos = get_github_profile_and_repos(settings.gh_token)
+        # github_repos = "\n".join([f"- {project.projectName}: {project.projectDescription}" for project in project_summaries])
+
+        # OpenAI API 호출
         client = OpenAI(api_key=openai_api_key)
         response = client.beta.chat.completions.parse(
             model=settings.gpt_model,
             messages=[
-               {"role": "system", "content": "As a senior developer, review the provided project summaries to generate `aboutMe` and `techStack`. Create concise summaries in Korean."},
-                {"role": "user", "content": (
-                    f"1. For `techStack`, analyze the following skillsets to identify the core skills and technologies frequently used by the developer:\n\n{skillsets}.\n\n"
-                    f"2. For `aboutMe`, use the following project descriptions to create a cohesive summary describing what kinds of persons:\n\n{project_descriptions}.\n\n"
-                )},
-                {"role": "assistant", "content": f"Sample summary format: {prompt}. Use this format to organize the generated content based on the provided text without including sample data itself."}
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a professional assistant specializing in creating an 'About Me' section for job applications. "
+                        "Your task is to derive concise and compelling statements based on the provided information. "
+                        "While utilizing the company information to craft relevant responses, avoid directly mentioning the company's name, slogan, or other identifying details. "
+                        "Instead, focus on aligning the applicant's traits and qualifications with the company's values and mission."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Company Information:\n"
+                        f"- Name: {company_info['name']}\n"
+                        f"- Slogan: {company_info['slogan']}\n"
+                        f"- Description: {company_info['description']}\n"
+                        f"- Values: {" ".join(company_info['values'])}\n\n"
+                        "GitHub Profile:\n"
+                        f"{github_readme}\n\n"
+                        "GitHub Repositories:\n"
+                        f"{github_repos}\n\n"
+                    )
+                },
+                {
+                    "role": "assistant",
+                    "content": f"Sample summary format: {prompt}."
+                }
             ],
             max_tokens=settings.max_output_tokens,
-            response_format=GptAboutmeTechstack,
+        
         )
+        pprint.pprint(response)
 
-        # GPT 응답 파싱
-        response_text = response.choices[0].message.parsed
-
-        # GptAboutmeTechstack 객체로 반환
+        # 응답 파싱
+        response_text = response.choices[0].message.content
+        # GptAboutme 객체로 반환
         return response_text
 
     except Exception as e:
-        print(f"Error during aboutme, techStack: {e}")
-        return GptAboutmeTechstack(techStack=[], aboutMe="")
+        print(f"Error generating About Me: {e}")
+        return ""
