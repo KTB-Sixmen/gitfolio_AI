@@ -3,7 +3,7 @@ name: FastAPI AI Server CI/CD Pipeline
 on:
   push:
     branches:
-      - feature/ai-cicd
+      - develop
 
 jobs:
   build_and_deploy:
