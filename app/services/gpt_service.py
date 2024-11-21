@@ -1,10 +1,11 @@
 from openai import OpenAI
 from app.config.settings import settings
-from app.dto.resume_dto import GptProject, Gptaboutme
+from app.dto.resume_dto import GptProject
 from app.services.github_service import get_github_profile_and_repos
 import tiktoken 
 import json
 import os
+import pprint
 
 # GPT를 사용한 요약 함수
 def summarize_text(text, openai_api_key, requirements, max_output_tokens, prompt):
@@ -187,7 +188,7 @@ def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt) -> str:
         print("Generating about me...")
         
         # 1. JSON 파일에서 회사 정보 읽기
-        json_file_path = os.path.join("data", "dependencies", "company_info.json")
+        json_file_path = os.path.join("/Users/eunma/Documents/GitHub/gitfolio_AI/app/data/dependencies/company_info.json")
         with open(json_file_path, "r", encoding="utf-8") as f:
             company_data = json.load(f)
 
@@ -220,10 +221,10 @@ def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt) -> str:
                     "role": "user",
                     "content": (
                         "Company Information:\n"
-                        f"- Name: {company_info.name}\n"
-                        f"- Slogan: {company_info.slogan}\n"
-                        f"- Description: {company_info.description}\n"
-                        f"- Values: {company_info.value}\n\n"
+                        f"- Name: {company_info['name']}\n"
+                        f"- Slogan: {company_info['slogan']}\n"
+                        f"- Description: {company_info['description']}\n"
+                        f"- Values: {" ".join(company_info['values'])}\n\n"
                         "GitHub Profile:\n"
                         f"{github_readme}\n\n"
                         "GitHub Repositories:\n"
@@ -238,10 +239,10 @@ def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt) -> str:
             max_tokens=settings.max_output_tokens,
         
         )
-
+        pprint.pprint(response)
 
         # 응답 파싱
-        response_text = response.choices[0].message.parsed
+        response_text = response.choices[0].message.content
         # GptAboutme 객체로 반환
         return response_text
 

@@ -1,11 +1,12 @@
 from fastapi import APIRouter
 from app.dto.resume_dto import ResumeRequest, ResumeResponse
-from app.services.api_service import process_repository, create_aboutme_techstack
+from app.services.api_service import process_repository
 from concurrent.futures import ProcessPoolExecutor
 import asyncio
 import logging
 from app.services.stack_service import generate_techstack
 from app.services.gpt_service import generate_aboutme
+from app.services.github_service import get_github_profile_and_repos
 from app.config.settings import settings
 
 
@@ -34,9 +35,16 @@ async def generate_resume(request: ResumeRequest):
     # # aboutme techstack 생성
     # aboutme_techstack = create_aboutme_techstack(project_summaries)
     
+
+    
+    # repo_name = "/".join(str(request.selectedRepo[0]).rstrip('/').split('/')[-2:])
+    repo_name = "Oh-JunTaek/gitportfolio"
+    
     # techstack 생성
-    techstack = generate_techstack(project_summaries)
+    techstack = generate_techstack(settings.gh_token, repo_name)
     aboutme = generate_aboutme(settings.openai_api_key)
+    
+    print(aboutme)
 
 
     # 최종 이력서 응답 생성

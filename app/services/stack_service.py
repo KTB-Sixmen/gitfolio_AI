@@ -2,7 +2,7 @@ import os
 import json
 from github import Github
 
-def generate_techstack(project_summaries, github_token, repo_name):
+def generate_techstack(github_token, repo_name):
     # GitHub 인증 및 레포지토리 접근
     g = Github(github_token)
     repo = g.get_repo(repo_name)
@@ -28,10 +28,14 @@ def generate_techstack(project_summaries, github_token, repo_name):
 
     # GitHub 레포지토리에서 언어 분석
     languages = repo.get_languages()
+    print(languages)
 
     # 종속성 파일 분석 및 기술 매칭
     contents = repo.get_contents("")
+    
+    print(contents)
     for content_file in contents:
+        print(content_file.name)
         if content_file.name in all_dependency_files:
             file_content = repo.get_contents(content_file.path).decoded_content.decode()
             for lang in languages.keys():
@@ -40,13 +44,30 @@ def generate_techstack(project_summaries, github_token, repo_name):
                         if framework.lower() in file_content.lower():
                             used_frameworks.add(framework)
 
-    # 프로젝트 요약에서 스킬셋 추출 (딕셔너리 접근 방식)
-    skillsets = [
-        skill.strip()
-        for project in project_summaries
-        for skill in project["skillSet"].split(",")
-    ]
+    # # 프로젝트 요약에서 스킬셋 추출 (딕셔너리 접근 방식)
+    # skillsets = [
+    #     skill.strip()
+    #     for project in project_summaries
+    #     for skill in project["skillSet"].split(",")
+    # ]
+    
+        # 토픽에서 프레임워크 추출
+    topics = repo.get_topics()
+    print("Topics:", topics)
+    for topic in topics:
+        for lang in languages.keys():
+            if lang in frameworks_data:  # 언어와 연결된 프레임워크만 확인
+                for framework in frameworks_data[lang]:
+                    if framework.lower() in topic.lower():
+                        print(f"Framework matched from topic '{topic}': {framework}")
+                        used_frameworks.add(framework)
+                        
+                        
+    
+    used_frameworks.update(languages.keys())
+
+    print(used_frameworks)
 
     # 기술 스택 결과 정리
-    tech_stack = sorted(used_frameworks.union(skillsets))
+    tech_stack = sorted(used_frameworks)
     return tech_stack
