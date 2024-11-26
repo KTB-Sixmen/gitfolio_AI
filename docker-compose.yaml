@@ -1,0 +1,21 @@
+services:
+  ai:
+    platform: linux/amd64
+    image: aida0/gitfolio_ai:test
+    container_name: gitfolio_ai
+    ports:
+      - target: 8000
+        published: 80
+        protocol: tcp
+      - target: 8000
+        published: 443
+        protocol: tcp
+    env_file:
+      - .env  # 현재 디렉토리의 .env 파일을 참조
+    networks:
+      - ai
+
+networks:
+  ai:
+    driver: overlay
+    attachable: true

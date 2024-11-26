@@ -65,32 +65,29 @@ jobs:
             exit 1
           fi
           
-          # Create JSON parameter string
-          PARAMS=$(cat << EOF
-          {
-            "commands": [
-              "cd /home/ec2-user",
-              "echo 'OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}' > .env",
-              "echo 'GH_TOKEN=${{ secrets.GH_TOKEN }}' >> .env",
-              "echo 'HOST=${{ secrets.HOST }}' >> .env",
-              "echo 'PORT=${{ secrets.PORT }}' >> .env",
-              "chmod 600 .env",
-              "docker-compose down -v --rmi all",
-              "docker-compose pull",
-              "docker-compose up -d"
-            ],
-            "workingDirectory": [
-              "/home/ec2-user"
-            ]
-          }
-          EOF
-          )
+          # docker-compose.yaml 파일 내용을 BASE64로 인코딩
+          DOCKER_COMPOSE_CONTENT=$(base64 docker-compose.yaml | tr -d '\n')
           
+          # AWS SSM 명령어 실행
           COMMAND_OUTPUT=$(aws ssm send-command \
             --instance-ids "${{ steps.get_instances.outputs.instance_ids }}" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploying AI Server" \
-            --parameters "$PARAMS" \
+            --parameters '{
+              "commands": [
+                "cd /home/ec2-user",
+                "echo '"${DOCKER_COMPOSE_CONTENT}"' | base64 -d > docker-compose.yaml",
+                "echo '\''OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}'\'' > .env",
+                "echo '\''GH_TOKEN=${{ secrets.GH_TOKEN }}'\'' >> .env",
+                "echo '\''HOST=${{ secrets.HOST }}'\'' >> .env",
+                "echo '\''PORT=${{ secrets.PORT }}'\'' >> .env",
+                "chmod 600 .env",
+                "docker-compose down -v --rmi all",
+                "docker-compose pull",
+                "docker-compose up -d"
+              ],
+              "workingDirectory": ["/home/ec2-user"]
+            }' \
             --timeout-seconds 600 \
             --region ap-northeast-2)
           
