@@ -73,6 +73,6 @@ local/
 .local/
 
 # Docker 관련
-docker-compose*
+#docker-compose*
 Dockerfile*
 .dockerignore

@@ -3,7 +3,7 @@ name: FastAPI AI Server CI/CD Pipeline
 on:
   push:
     branches:
-      - develop
+      - feature/ai-cicd
 
 jobs:
   build_and_deploy:
@@ -65,11 +65,15 @@ jobs:
             exit 1
           fi
           
-          # Create JSON parameter string
-          PARAMS=$(cat << EOF
+          # docker-compose.yaml 파일 내용을 BASE64로 인코딩
+          DOCKER_COMPOSE_CONTENT=$(base64 docker-compose.yaml)
+          
+          # JSON 형식의 파라미터 문자열 생성
+          PARAMS=$(cat <<EOF
           {
             "commands": [
               "cd /home/ec2-user",
+              "echo '${DOCKER_COMPOSE_CONTENT}' | base64 -d > docker-compose.yaml",
               "echo 'OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}' > .env",
               "echo 'GH_TOKEN=${{ secrets.GH_TOKEN }}' >> .env",
               "echo 'HOST=${{ secrets.HOST }}' >> .env",
@@ -86,11 +90,12 @@ jobs:
           EOF
           )
           
+          # AWS SSM을 통해 명령어 실행
           COMMAND_OUTPUT=$(aws ssm send-command \
             --instance-ids "${{ steps.get_instances.outputs.instance_ids }}" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploying AI Server" \
-            --parameters "$PARAMS" \
+            --parameters "${PARAMS}" \
             --timeout-seconds 600 \
             --region ap-northeast-2)
           
