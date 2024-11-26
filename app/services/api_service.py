@@ -1,6 +1,6 @@
 from app.dto.resume_dto import Project
 from app.services.github_service import get_combined_pr_text, get_combined_commit_diffs, get_commit_dates, clone_and_extract_files, delete_cloned_repo_from_url
-from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson, generate_aboutme_techstack
+from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson
 from app.services.data_service import save_summaries_to_file
 from app.config.settings import settings
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -92,6 +92,6 @@ def create_repo_start_end_date(repo_url):
     first_commit_date, latest_commit_date = get_commit_dates(settings.gh_token, repo_url)
     return first_commit_date, latest_commit_date
 
-# techStack과 aboutMe 생성
-def create_aboutme_techstack(project_summaries):
-    return generate_aboutme_techstack(project_summaries, settings.openai_api_key, prompt=settings.aboutme_techstack_prompt)
+# # techStack과 aboutMe 생성
+# def create_aboutme_techstack(project_summaries):
+#     return generate_aboutme_techstack(project_summaries, settings.openai_api_key, prompt=settings.aboutme_techstack_prompt)

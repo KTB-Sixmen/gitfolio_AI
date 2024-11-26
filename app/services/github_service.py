@@ -240,3 +240,37 @@ def delete_cloned_repo_from_url(repo_url, clone_dir=settings.repo_directory):
             print(f"Folder does not exist: {repo_path}")
     except Exception as e:
         print(f"Error deleting folder {repo_path}: {e}")
+
+def get_github_profile_and_repos(gh_token):
+    """
+    GitHub 프로필 README와 저장소 정보를 가져오는 함수
+    :param gh_token: GitHub Personal Access Token
+    :return: (github_readme, github_repos)
+    """
+    try:
+        # GitHub API 클라이언트 초기화
+        g = Github(gh_token)
+        user = g.get_user()  # 사용자 정보 가져오기
+
+        # 프로필 README 가져오기 (사용자 이름과 동일한 이름의 리포지토리)
+        try:
+            profile_repo_name = user.login  # 사용자 계정과 동일한 이름의 리포지토리
+            profile_repo = g.get_repo(f"{user.login}/{profile_repo_name}")
+            github_readme = profile_repo.get_readme().decoded_content.decode("utf-8")
+        except Exception:
+            github_readme = "사용자 GitHub 프로필 요약 정보가 없습니다."
+
+        # GitHub Repositories 정보 가져오기
+        try:
+            github_repos = "\n".join([
+                f"- {repo.name}: {repo.description if repo.description else 'No description provided'}"
+                for repo in user.get_repos()
+            ])
+        except Exception:
+            github_repos = "사용자 GitHub 프로젝트 정보를 가져올 수 없습니다."
+
+        return github_readme, github_repos
+
+    except Exception as e:
+        print(f"Error while fetching GitHub profile and repositories: {e}")
+        return "사용자 GitHub 프로필 요약 정보가 없습니다.", "사용자 GitHub 프로젝트 정보를 가져올 수 없습니다."
