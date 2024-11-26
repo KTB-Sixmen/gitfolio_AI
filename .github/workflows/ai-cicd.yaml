@@ -50,7 +50,7 @@ jobs:
         run: |
           INSTANCE_IDS=$(aws ec2 describe-instances \
             --region ap-northeast-2 \
-            --filters '[{"Name":"tag:Service","Values":["ai"]}]' \
+            --filters '[{"Name":"tag:Service","Values":["ai"]}, {"Name":"instance-state-name","Values":["running"]}]' \
             --query 'Reservations[].Instances[].InstanceId' \
             --output text)
           echo "INSTANCE_IDS=$INSTANCE_IDS"
