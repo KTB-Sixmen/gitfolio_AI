@@ -18,3 +18,4 @@ services:
 networks:
   ai:
     driver: overlay
+    attachable: true
