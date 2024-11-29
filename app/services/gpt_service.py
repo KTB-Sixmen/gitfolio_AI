@@ -3,7 +3,7 @@ from app.config.settings import settings
 from app.dto.resume_dto import GptProject
 from app.dto.resume_modify_dto import ResumeResponseDto
 from app.services.github_service import get_github_profile_and_repos
-from app.services.json_service import find_key_by_value
+# from app.services.json_service import find_key_by_value
 import tiktoken 
 import json
 import os
