@@ -1,7 +1,9 @@
 from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
+from app.dto.resume_modify_dto import ResumeResponseDto
 from app.services.github_service import get_github_profile_and_repos
+from app.services.json_service import find_key_by_value
 import tiktoken 
 import json
 import os
@@ -182,7 +184,7 @@ def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, 
         return GptProject(projectName="", skillSet="", projectDescription="")
     
 # 어바웃미 생성    
-def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt) -> str:
+def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt):
     try:
         # 요약 요청
         print("Generating about me...")
@@ -249,3 +251,72 @@ def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt) -> str:
     except Exception as e:
         print(f"Error generating About Me: {e}")
         return ""
+    
+def resume_update(openai_api_key, requirements, selected_text, context_data, prompt=settings.resume_update_prompt) :
+    try:
+        # 선택된 텍스트가 없을 때 처리
+        if not selected_text or not selected_text.strip():
+            print("Error: Selected text is empty or missing.")
+            return context_data # 오류 발생시 기존 데이터 반환
+        
+        # 수정 요구사항이 없을 때 처리
+        if not requirements or not requirements.strip():
+            print("Error: User request (requirements) is empty or missing.")
+            return context_data # 오류 발생시 기존 데이터 반환
+        
+        # # 선택된 텍스트의 키 경로 탐색
+        # key_path = find_key_by_value(context_data, selected_text)
+
+        # if not key_path:
+        #     print("Error: Selected text does not match any value in the JSON data.")
+        #     return context_data # 오류 발생시 기존 데이터 반환
+        
+        # 수정 요청
+        print("이력서 수정")
+        
+        # OpenAI API 호출
+        client = OpenAI(api_key=openai_api_key) 
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a friendly and professional resume modification expert."
+                        "Your task is to update only the specified sections of the resume based on the user's request while leaving all other parts unchanged." 
+                        "Ensure the modifications are concise, professional, and aligned with the tone of the original resume."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Context Data:\n"
+                        f"{json.dumps(context_data, indent=4)}\n\n"
+                        "Selected Text:\n"
+                        f"{selected_text}\n\n"
+                        # "Key Path:\n"
+                        # f"{key_path}\n\n"
+                        "User Request:\n"
+                        f"{requirements}\n\n"
+                        "Please update the selected text based on the instructions provided."
+                    )
+                },
+                {
+                    "role": "assistant",
+                    "content": f"Sample summary format: {prompt}."
+                }
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=ResumeResponseDto
+        )
+        
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+        
+        # ResumeResponseDto 객체로 반환
+        return response_text
+
+        
+    except Exception as e:
+        print(f"Error modifying resume with GPT: {e}")
+        return context_data  # 오류 발생 시 기존 데이터 반환
