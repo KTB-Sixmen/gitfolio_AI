@@ -61,3 +61,9 @@ ABOUTME_PROMPT = (
         "3. Use metaphorical or creative expressions to enhance engagement, avoiding direct repetition of the input text.\n"
         "4. Ensure each point reflects the provided company values and GitHub data."
 )
+
+RESUME_UPDATE_PROMPT = (
+        "Update the provided `selected_text` based on the user's request. "
+        "Modify only the specified text, and ensure the updated text aligns with the tone and style of the surrounding context. "
+        "Return only the modified text without altering the structure or other parts of the resume."
+)
