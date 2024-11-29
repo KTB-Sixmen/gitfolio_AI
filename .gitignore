@@ -231,4 +231,8 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows
 
-/data/
+app/data/code
+app/data/commit
+app/data/pr
+app/data/project
+app/data/repo
