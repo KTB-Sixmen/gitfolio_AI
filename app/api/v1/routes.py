@@ -40,8 +40,8 @@ async def generate_resume(request: ResumeRequest):
     
 
     
-    # repo_name = "/".join(str(request.selectedRepo[0]).rstrip('/').split('/')[-2:])
-    repo_name = "Oh-JunTaek/gitportfolio"
+    repo_name = "/".join(str(request.selectedRepo[0]).rstrip('/').split('/')[-2:])
+
     
     # techstack 생성
     techstack = generate_techstack(settings.gh_token, repo_name)
