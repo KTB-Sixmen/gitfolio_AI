@@ -1,13 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.dto.resume_dto import ResumeRequest, ResumeResponse
+from app.dto.resume_modify_dto import UpdateRequestDto,ResumeResponseDto
 from app.services.api_service import process_repository
 from concurrent.futures import ProcessPoolExecutor
 import asyncio
 import logging
+import json
 from app.services.stack_service import generate_techstack
-from app.services.gpt_service import generate_aboutme
+from app.services.gpt_service import generate_aboutme, resume_update
 from app.services.github_service import get_github_profile_and_repos
 from app.config.settings import settings
+
 
 
 router = APIRouter()
@@ -55,3 +58,35 @@ async def generate_resume(request: ResumeRequest):
         # aboutMe=aboutme_techstack.aboutMe
     )
     return resume_response
+
+
+
+
+@router.put("/api/resumes", response_model=ResumeResponseDto)
+async def update_resume(request: UpdateRequestDto):
+    try:
+        # 요청 데이터 확인
+        print("=== Received Request Data ===")
+        print(f"Selected Text: {request.selectedText}")
+        print(f"Requirement: {request.requirement}")
+        print(f"Resume Info: {request.resumeInfo.dict()}")
+
+        # `resume_update` 호출 준비
+        print("=== Calling `resume_update` ===")
+        updated_resume = resume_update(
+            openai_api_key=settings.openai_api_key,
+            requirements=request.requirement,
+            selected_text=request.selectedText,
+            context_data=request.resumeInfo.dict()
+        )
+
+        # 업데이트된 결과 확인
+        print("=== Updated Resume Data ===")
+        print(updated_resume)
+
+        # 업데이트된 결과 반환
+        return updated_resume
+
+    except Exception as e:
+        print(f"Error in update_resume: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while updating the resume.")

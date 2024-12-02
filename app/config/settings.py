@@ -1,7 +1,7 @@
 from typing import List
 from pydantic_settings import BaseSettings
 from app.config.constant import GPT_MODEL, MAX_TOTAL_TOKENS, PROMPT_TOKEN_RESERVE, MAX_OUTPUT_TOKENS, MAX_CONTENT_TOKENS, DEFAULT_DATA, CODE_DATA, PR_DATA, COMMIT_DATA, PROJECT_DATA, REPO_DIRECTORY, FILE_EXTENSIONS
-from app.prompts.resume_prompt import CODE_SUMMARY_PROMPT, PR_SUMMARY_PROMPT, COMMIT_DIFF_SUMMARY_PROMPT, FINAL_SUMMARY_PROMPT, FINAL_PROJECT_PROMPT, SIMPLIFY_PROJECT_PROMPT, ABOUTME_TECHSTACK_PROMPT, ABOUTME_PROMPT
+from app.prompts.resume_prompt import CODE_SUMMARY_PROMPT, PR_SUMMARY_PROMPT, COMMIT_DIFF_SUMMARY_PROMPT, FINAL_SUMMARY_PROMPT, FINAL_PROJECT_PROMPT, SIMPLIFY_PROJECT_PROMPT, ABOUTME_TECHSTACK_PROMPT, ABOUTME_PROMPT, RESUME_UPDATE_PROMPT
 class Settings(BaseSettings):
     # API 키
     openai_api_key: str
@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     simplify_project_prompt: str = SIMPLIFY_PROJECT_PROMPT
     aboutme_techstack_prompt: str = ABOUTME_TECHSTACK_PROMPT
     aboutme_prompt: str = ABOUTME_PROMPT
+    resume_update_prompt: str = RESUME_UPDATE_PROMPT
 
     class Config:
         env_file = ".env"
