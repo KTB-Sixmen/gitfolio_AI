@@ -182,22 +182,41 @@ def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, 
         return GptProject(projectName="", skillSet="", projectDescription="")
     
 # 어바웃미 생성    
-def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt) -> str:
+def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt):
     try:
         # 요약 요청
         print("Generating about me...")
         
-        # 1. JSON 파일에서 회사 정보 읽기
-        json_file_path = os.path.join("/Users/eunma/Documents/GitHub/gitfolio_AI/app/data/dependencies/company_info.json")
-        with open(json_file_path, "r", encoding="utf-8") as f:
-            company_data = json.load(f)
+        # # 1. JSON 파일에서 회사 정보 읽기 - 상대경로로 수정해야 함
+        # json_file_path = os.path.join("/Users/eunma/Documents/GitHub/gitfolio_AI/app/data/dependencies/company_info.json")
+        # with open(json_file_path, "r", encoding="utf-8") as f:
+        #     company_data = json.load(f)
+        
+        # 1-1. 하나의 공동 인재상으로 만든 회사 정보
+        company_data = {
+            "companies": [
+                {
+                    "name": "Dream Company",
+                    "slogan": "도전, 소통, 창의로 더 나은 미래를 만드는 회사",
+                    "description": "Dream Company는 도전과 창의를 통해 새로운 가치를 창출하며, 소통과 협력을 바탕으로 고객과 사회에 긍정적인 영향을 미칩니다. 우리는 탁월한 실행력과 윤리적 책임감을 통해 지속 가능한 성장을 추구합니다.",
+                    "values": [
+                        "끊임없는 열정과 도전정신으로 기존의 한계를 뛰어넘습니다.",
+                        "높은 목표를 설정하고 이를 달성하기 위해 치열하게 고민하고 실행합니다.",
+                        "구성원 간 신뢰를 바탕으로 협력하며 팀워크를 중시합니다.",
+                        "다양한 배경과 시각을 존중하며 포용적인 문화를 지향합니다.",
+                        "사용자에게 가치를 더하고 기대를 뛰어넘는 경험을 제공합니다.",
+                        "정직과 투명성을 바탕으로 신뢰를 쌓으며, 공정한 경쟁을 추구합니다.",
+                        "목표를 향해 몰입하며, 신속하고 기민하게 실행합니다.",
+                        "전문성과 역량을 꾸준히 배양하며, 개인과 조직의 성장을 동시에 추구합니다.",
+                        "사회적 책임을 다하며 지속 가능한 성장을 지향합니다."
+                    ]
+                }
+            ]
+        }
 
-        # 2. 단 하나의 샘플 데이터만 있다고 가정하고 첫 번째 항목 사용
+
+        # 2. 통합된 회사 정보 사용
         company_info = company_data["companies"][0]
-
-        # 프로젝트 설명 결합
-        # project_descriptions = "\n\n".join([project.projectDescription for project in project_summaries])
-
 
         # GitHub README 토큰 호출
         github_readme, github_repos = get_github_profile_and_repos(settings.gh_token)
