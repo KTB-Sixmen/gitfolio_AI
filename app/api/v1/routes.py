@@ -16,7 +16,7 @@ from app.config.settings import settings
 router = APIRouter()
 
 # 이력서 생성 api
-@router.post("/api/resumes", response_model=ResumeResponse)
+@router.post("/api/ai/resumes", response_model=ResumeResponse)
 async def generate_resume(request: ResumeRequest):
     logging.basicConfig(level=logging.INFO)
 
@@ -62,7 +62,7 @@ async def generate_resume(request: ResumeRequest):
 
 
 
-@router.put("/api/resumes", response_model=ResumeResponseDto)
+@router.put("/api/ai/resumes", response_model=ResumeResponseDto)
 async def update_resume(request: UpdateRequestDto):
     try:
         # 요청 데이터 확인
