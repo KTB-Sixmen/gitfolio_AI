@@ -39,7 +39,7 @@ async def generate_resume(request: ResumeRequest):
     # aboutme_techstack = create_aboutme_techstack(project_summaries)
     
 
-    
+    # 레포 이름
     repo_name = "/".join(str(request.selectedRepo[0]).rstrip('/').split('/')[-2:])
 
     

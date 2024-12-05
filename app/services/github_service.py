@@ -300,11 +300,11 @@ def project_title_candidate(gh_token, repo_url):
         # 제목 후보 3 : topic
         try:
             topics = repo.get_topics()  # 토픽 리스트 가져오기
-            title_candidate_3 = ", ".join(topics) if topics else "No topics available"
+            title_candidate_3 = ", ".join(topics) if topics else ""
             print(f"Title Candidate 3 (Topics): {title_candidate_3}")
         except Exception as e:
             print(f"Error fetching topics: {e}")
-            title_candidate_3 = "No topics available"
+            title_candidate_3 = ""
             
         return title_candidate_1, title_candidate_2, title_candidate_3
 
