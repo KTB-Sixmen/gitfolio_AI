@@ -55,3 +55,6 @@ class UpdateRequestDto(BaseModel):
     selectedText: str
     requirement: str
     resumeInfo: ResumeResponseDto
+    
+class ProjectTitleDto(BaseModel):
+    projectTitle: str

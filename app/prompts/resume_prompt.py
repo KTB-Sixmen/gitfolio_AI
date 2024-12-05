@@ -67,3 +67,9 @@ RESUME_UPDATE_PROMPT = (
         "Modify only the specified text, and ensure the updated text aligns with the tone and style of the surrounding context. "
         "Return only the modified text without altering the structure or other parts of the resume."
 )
+
+PROJECT_TITLE_PROMPT = (
+    "Return the best project title as plain text. "
+    "Do not include any additional explanation, formatting, or context. "
+    "Only provide the title itself."
+)
