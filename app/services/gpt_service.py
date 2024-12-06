@@ -1,7 +1,7 @@
 from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto
+from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -140,7 +140,6 @@ def generate_project_summary_byJson(code_summary, pr_summary, commit_summary, op
         print(f"Error during summarization: {e}")
         return GptProject(projectName="", skillSet="", projectDescription="")
     
-
 # 최종 요약된 부분, 더 간략화 시키기 및 Json형태 포맷으로 정리
 def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, prompt=settings.simplify_project_prompt):
     try:
@@ -334,8 +333,11 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
 
 def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
     try:
-        # 제목 후보 1과 후보 2 가져오기
-        title_candidate_1, title_candidate_2, title_candidate_3 = project_title_candidate(gh_token, repo_url)
+        # 제목 후보 가져오기
+        title_candidates = project_title_candidate(gh_token, repo_url)
+        title_candidate_1 = title_candidates.get("title_candidate_1", "")
+        title_candidate_2 = title_candidates.get("title_candidate_2", "")
+        title_candidate_3 = title_candidates.get("title_candidate_3", "")
         
         # 후보 검증 및 최종 제목 결정
         if title_candidate_1 == title_candidate_2:
@@ -396,4 +398,11 @@ def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.pro
         
     except Exception as e:
         print(f"Error modifying resume with GPT: {e}")
-        return ""
+        return {
+            "projectTitle": "",
+            "title_candidates": {
+                "title_candidate_1": "",
+                "title_candidate_2": "",
+                "title_candidate_3": ""
+            }
+        }
