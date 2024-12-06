@@ -1,9 +1,8 @@
 from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto
-from app.services.github_service import get_github_profile_and_repos
-# from app.services.json_service import find_key_by_value
+from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto
+from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
 import os
@@ -141,7 +140,6 @@ def generate_project_summary_byJson(code_summary, pr_summary, commit_summary, op
         print(f"Error during summarization: {e}")
         return GptProject(projectName="", skillSet="", projectDescription="")
     
-
 # 최종 요약된 부분, 더 간략화 시키기 및 Json형태 포맷으로 정리
 def simplify_project_summary_byJson(summary_text, openai_api_key, requirements, prompt=settings.simplify_project_prompt):
     try:
@@ -283,13 +281,6 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
             print("Error: User request (requirements) is empty or missing.")
             return context_data # 오류 발생시 기존 데이터 반환
         
-        # # 선택된 텍스트의 키 경로 탐색
-        # key_path = find_key_by_value(context_data, selected_text)
-
-        # if not key_path:
-        #     print("Error: Selected text does not match any value in the JSON data.")
-        #     return context_data # 오류 발생시 기존 데이터 반환
-        
         # 수정 요청
         print("이력서 수정")
         
@@ -339,3 +330,79 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
     except Exception as e:
         print(f"Error modifying resume with GPT: {e}")
         return context_data  # 오류 발생 시 기존 데이터 반환
+
+def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
+    try:
+        # 제목 후보 가져오기
+        title_candidates = project_title_candidate(gh_token, repo_url)
+        title_candidate_1 = title_candidates.get("title_candidate_1", "")
+        title_candidate_2 = title_candidates.get("title_candidate_2", "")
+        title_candidate_3 = title_candidates.get("title_candidate_3", "")
+        
+        # 후보 검증 및 최종 제목 결정
+        if title_candidate_1 == title_candidate_2:
+            print("Title Candidate 1 and 2 are identical.")
+            title = {"projectTitle": title_candidate_1}
+            return title
+        
+        print("프로젝트 제목을 추론합니다.")
+        
+        # OpenAI API 호출
+        client = OpenAI(api_key=openai_api_key) 
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a professional assistant tasked with deciding the best project title. "
+                        "Evaluate the provided title candidates and choose the most appropriate one. "
+                        "Focus on clarity, relevance, and alignment with typical project naming conventions."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "You are tasked with evaluating and determining the best project title based on the following candidates:\n\n"
+                        f"title_candidate_1 (Repository Name):\n{title_candidate_1}\n\n"
+                        f"title_candidate_2 (README First Line):\n{title_candidate_2}\n\n"
+                        f"title_candidate_3 (Topics):\n{title_candidate_3}\n\n"
+                        "Candidate 1 and 2 are the primary sources for the project title as they are likely to directly reflect the project’s purpose. "
+                        "Evaluate these first to infer a suitable title. "
+                        "If these candidates lack sufficient clarity or relevance, use Candidate 3 (Topics) to provide additional context or inspiration for the title.\n\n"
+                        "Your decision should prioritize the following criteria:\n"
+                        "- Clarity: The title should be easy to understand and intuitive.\n"
+                        "- Relevance: The title should accurately represent the project’s purpose, functionality, or key features.\n"
+                        "- Alignment: The title should align with common naming conventions for projects of this type.\n\n"
+                        "If none of the candidates are appropriate, synthesize information from all three candidates to create a new title that best fits the project.\n\n"
+                        "Be concise and professional in your suggestion."
+                    )
+                },
+                {
+                    "role": "assistant",
+                    "content": f"Sample summary format: {prompt}."
+                }
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=ProjectTitleDto
+        )
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+        
+        # 최종 리턴값 확인 - 테스트용
+        print(f"Final Response Text: {response_text}")
+        
+        # ProjectTitleDto 객체로 반환
+        return response_text
+
+        
+    except Exception as e:
+        print(f"Error modifying resume with GPT: {e}")
+        return {
+            "projectTitle": "",
+            "title_candidates": {
+                "title_candidate_1": "",
+                "title_candidate_2": "",
+                "title_candidate_3": ""
+            }
+        }
