@@ -1,7 +1,7 @@
 from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto
+from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -269,6 +269,7 @@ def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt):
         print(f"Error generating About Me: {e}")
         return ""
     
+# 이력서 수정    
 def resume_update(openai_api_key, requirements, selected_text, context_data, prompt=settings.resume_update_prompt) :
     try:
         # 선택된 텍스트가 없을 때 처리
@@ -331,6 +332,7 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
         print(f"Error modifying resume with GPT: {e}")
         return context_data  # 오류 발생 시 기존 데이터 반환
 
+# 이력서 제목 생성
 def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
     try:
         # 제목 후보 가져오기
@@ -406,3 +408,48 @@ def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.pro
                 "title_candidate_3": ""
             }
         }
+
+# 맡은 업무 생성        
+def generate_role_and_task(openai_api_key,code_summary, pr_summary, commit_summary, requirements, prompt=settings.role_and_task_prompt):
+    try:
+        # 담당업무 생성
+        print("Generating Role and Task...")
+        
+        # 어떤 정보를 가져올건지 로직 구현
+        if not code_summary.strip() and not pr_summary.strip() and not commit_summary.strip():  # 텍스트가 비어 있는 경우 처리
+            print("No text provided for summarization. Skipping...")
+            return
+                
+        # gpt 호출
+        client = OpenAI(api_key=openai_api_key)
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {"role": "system", 
+                 "content": (
+                     "You are a professional assistant specializing in extracting roles and responsibilities from project data. "
+                     "Your task is to identify the key responsibilities and actions taken by the user based on the provided summaries."
+                 )},
+                {"role": "user", 
+                 "content": (
+                     f"Analyze the following data and extract the main roles and responsibilities:\n\n"
+                     f"### Code Summary:\n{code_summary}\n\n"
+                     f"### PR Summary:\n{pr_summary}\n\n"
+                     f"### Commit Summary:\n{commit_summary}\n\n"
+                     f"### Requirements:\n{requirements}\n\n"
+                     "Please provide the roles and responsibilities in a concise list format."
+                 )},
+                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=RoleAndTaskDto,
+        )
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+
+        # Role and task 객체로 반환
+        return response_text
+
+    except Exception as e:
+        print(f"Error during summarization: {e}")
+        return RoleAndTaskDto(roleAndTask="")

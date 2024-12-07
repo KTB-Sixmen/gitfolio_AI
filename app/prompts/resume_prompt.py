@@ -73,3 +73,19 @@ PROJECT_TITLE_PROMPT = (
     "Do not include any additional explanation, formatting, or context. "
     "Only provide the title itself."
 )
+
+ROLE_AND_TASK_PROMPT = (
+    "Create a summary of the main roles and responsibilities based on the provided data. "
+    "Use bullet points to list the key actions and tasks performed. Each point should:\n"
+    "- Begin with an action verb.\n"
+    "- Be concise and specific.\n"
+    "- Clearly reflect the user's contributions and achievements.\n\n"
+    "- Follow this pattern:"
+    "- Performed [specific action] to achieve [specific result], improving/enhancing [specific metric] by [quantifiable amount].  "    
+    "- Identified [specific issue] and implemented [specific action], resulting in a performance improvement of [quantifiable amount]."  
+    "- Utilized [specific tool or library] to develop/implement [specific functionality or feature]. " 
+    "For example:\n"
+    "- Designed and implemented Redis caching to improve API response times by 30%.\n"
+    "- Refactored MongoDB queries to reduce average query time by 55.4%.\n"
+    "- Developed an event-driven architecture using Kafka for real-time notifications."
+)

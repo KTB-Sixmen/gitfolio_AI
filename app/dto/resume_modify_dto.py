@@ -58,3 +58,6 @@ class UpdateRequestDto(BaseModel):
     
 class ProjectTitleDto(BaseModel):
     projectTitle: str
+    
+class RoleAndTaskDto(BaseModel):
+    roleAndTask: List[str]
