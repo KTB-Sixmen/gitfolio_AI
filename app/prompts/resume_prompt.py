@@ -89,3 +89,5 @@ ROLE_AND_TASK_PROMPT = (
     "- Refactored MongoDB queries to reduce average query time by 55.4%.\n"
     "- Developed an event-driven architecture using Kafka for real-time notifications."
 )
+
+TROUBLE_SHOOTING_PROMPT = ()

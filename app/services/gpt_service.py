@@ -1,7 +1,7 @@
 from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto
+from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -453,3 +453,57 @@ def generate_role_and_task(openai_api_key,code_summary, pr_summary, commit_summa
     except Exception as e:
         print(f"Error during summarization: {e}")
         return RoleAndTaskDto(roleAndTask="")
+
+# 트러블 슈팅 생성    
+def trouble_shooting(openai_api_key,code_summary, pr_summary, commit_summary, requirements, prompt=settings.trouble_shooting_prompt):
+    try:
+        # 담당업무 생성
+        print("Generating Troubleshooting...")
+        
+        # 어떤 정보를 가져올건지 로직 구현
+        if not code_summary.strip() and not pr_summary.strip() and not commit_summary.strip():  # 텍스트가 비어 있는 경우 처리
+            print("No text provided for summarization. Skipping...")
+            return TroubleShootingDto(problem="", hypothesis="", tring="", result="")
+
+                
+        # gpt 호출
+        client = OpenAI(api_key=openai_api_key)
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {                    
+                 "role": "system",
+                    "content": (
+                        "You are an experienced developer specializing in problem-solving. "
+                        "Your task is to analyze the provided project summaries and identify one major issue faced during the project. "
+                        "Then outline the hypothesis made to solve the issue, the actions taken, and the resulting improvements."
+                    )
+                },
+                {"role": "user", 
+                    "content": (
+                        f"Analyze the following summaries:\n\n"
+                        f"### Code Summary:\n{code_summary}\n\n"
+                        f"### PR Summary:\n{pr_summary}\n\n"
+                        f"### Commit Summary:\n{commit_summary}\n\n"
+                        f"### Requirements:\n{requirements}\n\n"
+                        "Provide a detailed response in the following format:\n"
+                        "- Problem: [Describe the issue]\n"
+                        "- Hypothesis: [State the hypothesis or approach]\n"
+                        "- Tring: [Describe the actions taken]\n"
+                        "- Result: [Explain the improvement achieved with quantifiable metrics if possible]"
+                 )
+                },
+                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=TroubleShootingDto,
+        )
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+
+        # Role and task 객체로 반환
+        return response_text
+
+    except Exception as e:
+        print(f"Error during summarization: {e}")
+        return TroubleShootingDto(problem="", hypothesis="", tring="", result="")

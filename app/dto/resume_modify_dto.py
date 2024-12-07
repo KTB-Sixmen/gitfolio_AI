@@ -61,3 +61,9 @@ class ProjectTitleDto(BaseModel):
     
 class RoleAndTaskDto(BaseModel):
     roleAndTask: List[str]
+    
+class TroubleShootingDto(BaseModel):
+    problem: str
+    hypothesis: str
+    tring: str
+    result: str
