@@ -1,7 +1,7 @@
 from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto
+from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -446,6 +446,8 @@ def generate_role_and_task(openai_api_key,code_summary, pr_summary, commit_summa
         )
         # GPT 응답 파싱
         response_text = response.choices[0].message.parsed
+        
+        print("Parsed GPT response:", response_text)
 
         # Role and task 객체로 반환
         return response_text
@@ -455,7 +457,7 @@ def generate_role_and_task(openai_api_key,code_summary, pr_summary, commit_summa
         return RoleAndTaskDto(roleAndTask="")
 
 # 트러블 슈팅 생성    
-def trouble_shooting(openai_api_key,code_summary, pr_summary, commit_summary, requirements, prompt=settings.trouble_shooting_prompt):
+def generate_trouble_shooting(openai_api_key,code_summary, pr_summary, commit_summary, requirements, prompt=settings.trouble_shooting_prompt):
     try:
         # 담당업무 생성
         print("Generating Troubleshooting...")
@@ -507,3 +509,71 @@ def trouble_shooting(openai_api_key,code_summary, pr_summary, commit_summary, re
     except Exception as e:
         print(f"Error during summarization: {e}")
         return TroubleShootingDto(problem="", hypothesis="", tring="", result="")
+    
+# STAR 기법 기반 생성  
+def generate_star_summary(openai_api_key, repo_data, issues_data, pr_summary, commit_summary, pr_data, commits_data, requirements, prompt=settings.star_prompt):
+    try:
+        # 데이터 검증
+        if not repo_data and not issues_data and not pr_data and not commits_data:
+            print("No data provided for STAR generation. Skipping...")
+            return StarDto(situation= "", task = "", action = "", result = "")
+
+        print("star기법으로 프로젝트를 요약합니다...")
+
+        # beta, parse형태로 구성됨. 주기적으로 공식문서 업데이트 확인할것
+        client = OpenAI(api_key=openai_api_key)
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an experienced developer tasked with generating a STAR-based project summary. "
+                        "Each STAR element (Situation, Task, Action, Result) must be derived from specific types of data. "
+                        "When possible, prioritize **quantifiable metrics or measurable outcomes** (e.g., performance improvement percentages, response time reductions, or user adoption rates) "
+                        "to make the summary more impactful and data-driven."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Generate a STAR summary using the provided data. Use the following data sources for each element:\n\n"
+                        "**Situation** (프로젝트의 목표와 배경):\n"
+                        f"- README: {repo_data.get('readme', 'No README provided')}\n"
+                        f"- Description: {repo_data.get('description', 'No description provided')}\n"
+                        f"- Topics: {repo_data.get('topics', 'No topics available')}\n\n"
+                        "**Task** (해결해야 할 문제):\n"
+                        f"- Issues: {issues_data}\n"
+                        f"- Pull Requests (Titles and Descriptions): {pr_data}\n\n"
+                        "**Action** (취한 행동):\n"
+                        f"- Commit Diffs and Messages: {commits_data}\n"
+                        f"- Pull Request Changes: {pr_data}\n\n"
+                        "**Result** (결과와 성과):\n"
+                        f"- Completed Issues and Merged PRs: {pr_data}\n"
+                        f"- Commit Performance Metrics: {commits_data}\n"
+                        f"- Project Outcome (if mentioned in README): {repo_data.get('readme', '')}\n\n"
+                        "Generate the STAR summary in the following format:\n"
+                        "- **Situation**: [Background and goals]\n"
+                        "- **Task**: [Challenges and problems solved]\n"
+                        "- **Action**: [Actions taken to address the tasks]\n"
+                        "- **Result**: [Results with measurable outcomes or improvements]"
+                    )
+                },
+                {
+                    "role": "assistant",
+                    "content": f"Focus on: {requirements}\n{prompt}"
+                }
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=StarDto,
+        )
+
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+
+        # GptProject 객체로 반환
+        return response_text
+
+    except Exception as e:
+        print(f"An error occurred while simplifying the summary: {e}")
+        return StarDto(situation= "", task = "", action = "", result = "")

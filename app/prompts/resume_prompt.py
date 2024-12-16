@@ -23,6 +23,7 @@ FINAL_SUMMARY_PROMPT = (
 )
 
 FINAL_PROJECT_PROMPT = (
+    "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
     "Write concisely and clearly, highlighting your unique strengths rather than common development details."
 )
 
@@ -61,20 +62,23 @@ ABOUTME_PROMPT = (
         "3. Use metaphorical or creative expressions to enhance engagement, avoiding direct repetition of the input text.\n"
         "4. Ensure each point reflects the provided company values and GitHub data."
 )
-
+# 이력서 재생성
 RESUME_UPDATE_PROMPT = (
+    "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
         "Update the provided `selected_text` based on the user's request. "
         "Modify only the specified text, and ensure the updated text aligns with the tone and style of the surrounding context. "
         "Return only the modified text without altering the structure or other parts of the resume."
 )
-
+# 프로젝트 이름 생성
 PROJECT_TITLE_PROMPT = (
+    
     "Return the best project title as plain text. "
     "Do not include any additional explanation, formatting, or context. "
     "Only provide the title itself."
 )
-
+# 맡은 업무 생성
 ROLE_AND_TASK_PROMPT = (
+    "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
     "Create a summary of the main roles and responsibilities based on the provided data. "
     "Use bullet points to list the key actions and tasks performed. Each point should:\n"
     "- Begin with an action verb.\n"
@@ -89,5 +93,17 @@ ROLE_AND_TASK_PROMPT = (
     "- Refactored MongoDB queries to reduce average query time by 55.4%.\n"
     "- Developed an event-driven architecture using Kafka for real-time notifications."
 )
+# 트러블슈팅 생성
+TROUBLE_SHOOTING_PROMPT = (
+    "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
+)
 
-TROUBLE_SHOOTING_PROMPT = ()
+# star기법 기반 생성
+STAR_PROMPT = (
+    "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
+        "The output should be generated in the following format:\n\n"
+        "- **Situation**: [Background and goals of the project]\n"
+        "- **Task**: [Challenges or problems addressed]\n"
+        "- **Action**: [Specific actions taken to solve the problem]\n"
+        "- **Result**: [Outcomes and improvements, including measurable metrics if possible]"
+)

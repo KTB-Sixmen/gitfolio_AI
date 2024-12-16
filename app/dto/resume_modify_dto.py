@@ -67,3 +67,9 @@ class TroubleShootingDto(BaseModel):
     hypothesis: str
     tring: str
     result: str
+    
+class StarDto(BaseModel):
+    situation: str
+    task: str
+    action: str
+    result: str
