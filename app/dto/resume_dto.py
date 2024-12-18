@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl
-from typing import List, Optional, Union
+from typing import List, Union
 from app.dto.resume_modify_dto import StarDto, TroubleShootingDto
 
 
@@ -20,11 +20,7 @@ class Project(BaseModel):
     skillSet: str
     roleAndTask: List[str] # BASIC 템플릿에서 사용  
     repoLink: HttpUrl
-    # 선택적 필드
-    # projectDescription: Optional[str] = None # 자율 생성 템플릿    
-    # troubleShooting: Optional[str] = None   # STAR 템플릿에서 사용
-    # star : Optional[str] = None
-    
+
 class StarProject(Project):
     star: StarDto
 class GitfolioProject(Project):
@@ -47,32 +43,3 @@ class ResumeResponse(BaseModel):
     techStack: List[str]
     aboutMe: str
     projects: List[Union[Project, StarProject, GitfolioProject]]
-    # roleAndTask: Optional[List[str]] = None  # BASIC 템플릿에서 사용   
-    # troubleShooting: Optional[str] = None   # gitfolio 템플릿에서 사용
-    # star: Optional[str] = None # star 템플릿에서 사용
-    
-    
-# 이력서 양식 별 dto   
-# class BasicDto(BaseModel):
-#     template: str
-#     projects: List[Project]
-#     techStack:List[str]
-#     aboutMe: str
-    
-# class star_dto(BaseModel):
-#     template: str
-#     projects: List[Project]
-#     techStack:List[str]
-#     aboutMe: str
-    
-# class gitfolio_dto(BaseModel):
-#     template: str
-#     projects: List[Project]
-#     techStack:List[str]
-#     aboutMe: str
-    
-# class freedom_dto(BaseModel):
-#     template: str
-#     projects: List[Project]
-#     techStack: List[str]
-#     aboutMe: str

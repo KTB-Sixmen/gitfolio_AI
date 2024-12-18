@@ -1,18 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from app.dto.resume_dto import ResumeRequest, ResumeResponse, StarProject
-from app.dto.resume_modify_dto import UpdateRequestDto,ResumeResponseDto, StarDto
+from app.dto.resume_dto import ResumeRequest, ResumeResponse
+from app.dto.resume_modify_dto import UpdateRequestDto,ResumeResponseDto
 from app.services.api_service import process_repository
 from concurrent.futures import ProcessPoolExecutor
-from app.services.resume_templates import generate_resume_response
 import asyncio
 import logging
-import json
 from app.services.stack_service import generate_techstack
-from app.services.gpt_service import generate_aboutme, resume_update, generate_role_and_task, generate_trouble_shooting, generate_star_summary
-from app.services.github_service import get_github_profile_and_repos
+from app.services.gpt_service import generate_aboutme, resume_update
 from app.config.settings import settings
-from fastapi.responses import JSONResponse
-# from app.resume_templates.basic import generate_basic_template
 
 
 
@@ -84,42 +79,3 @@ async def generate_resume(request: ResumeRequest):
     print(resume_response)
     
     return resume_response
-
-    # 템플릿 분기처리
-    if request.template == "BASIC":
-        return project_data
-        # basic_template = generate_basic_template(
-        #     projects = project_data,
-        #     techStack = techStack,
-        #     aboutMe = aboutMe
-        #     )
-        # return basic_template
-    elif request.template == "STAR":
-        star_resume = StarProject(
-            
-        )
-        # star_template = generate_star_template(
-        #     projects = project_data,
-        #     techStack = techStack,
-        #     aboutMe = aboutMe
-        #     # star
-        #     )
-        # return star_template
-    # elif request.template == "GITFOLIO":
-    #     gitfolio_template = generate_gitfolio_template(
-    #         projects = project_data,
-    #         techStack = techstack, 
-    #         aboutMe = aboutme,
-    #         trouble_shooting="Troubleshooting 내용"
-    #         )
-    #     return gitfolio_template
-    # elif request.template == "freedom":
-    #     freedom_template = generate_freedom_template(
-    #         projects = project_data,
-    #         techStack = techStack,
-    #         aboutMe = aboutMe
-    #         )
-    #     return freedom_template
-    else:
-        return {"error": "Invalid template type provided"}
-    
