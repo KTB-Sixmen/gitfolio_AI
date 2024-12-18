@@ -275,6 +275,7 @@ def get_github_profile_and_repos(gh_token):
         print(f"Error while fetching GitHub profile and repositories: {e}")
         return "사용자 GitHub 프로필 요약 정보가 없습니다.", "사용자 GitHub 프로젝트 정보를 가져올 수 없습니다."
 
+# 프로젝트 제목 생성 정보
 def project_title_candidate(gh_token, repo_url):
     try:
         # GitHub API 클라이언트 초기화
@@ -311,3 +312,64 @@ def project_title_candidate(gh_token, repo_url):
     except Exception as e:
         print(f"Error creating project name: {e}")
         return "프로젝트 제목을 생성할 수 없습니다."
+
+# star기법에 사용될 깃허브 데이터    
+def get_repository_data(gh_token, repo_url):
+    """
+    리포지토리의 README, Description, Topics을 가져와 딕셔너리 형태로 반환합니다.
+    """
+    try:
+        g = Github(gh_token)
+        repo_name = "/".join(repo_url.rstrip('/').split('/')[-2:])
+        repo = g.get_repo(repo_name)
+
+        # README 가져오기
+        try:
+            readme_content = repo.get_readme().decoded_content.decode("utf-8")
+        except Exception:
+            readme_content = "No README provided."
+
+        # Description 가져오기
+        description = repo.description if repo.description else "No description provided."
+
+        # Topics 가져오기
+        topics = repo.get_topics()
+        topics_string = ", ".join(topics) if topics else "No topics available."
+
+        # 결과 반환
+        return {
+            "readme": readme_content,
+            "description": description,
+            "topics": topics_string
+        }
+
+    except Exception as e:
+        print(f"Error fetching repository data: {e}")
+        return {"readme": "", "description": "", "topics": ""}
+
+#  이슈 관련 data ->star기법에 활용    
+def get_issues_data(gh_token, repo_url):
+    """
+    리포지토리의 Open된 이슈 제목과 내용을 가져와 문자열로 반환합니다.
+    """
+    try:
+        g = Github(gh_token)
+        repo_name = "/".join(repo_url.rstrip('/').split('/')[-2:])
+        repo = g.get_repo(repo_name)
+
+        issues = repo.get_issues(state="open")
+        combined_issues = ""
+
+        for issue in issues:
+            title = issue.title
+            body = issue.body if issue.body else "No description provided."
+            combined_issues += f"Title: {title}\nDescription: {body}\n\n{'='*50}\n\n"
+
+        if not combined_issues:
+            combined_issues = "No open issues found."
+
+        return combined_issues
+
+    except Exception as e:
+        print(f"Error fetching issues data: {e}")
+        return "No issues available."

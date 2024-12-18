@@ -58,3 +58,18 @@ class UpdateRequestDto(BaseModel):
     
 class ProjectTitleDto(BaseModel):
     projectTitle: str
+    
+class RoleAndTaskDto(BaseModel):
+    roleAndTask: List[str]
+    
+class TroubleShootingDto(BaseModel):
+    problem: str
+    hypothesis: str
+    tring: str
+    result: str
+    
+class StarDto(BaseModel):
+    situation: str
+    task: str
+    action: str
+    result: str
