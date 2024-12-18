@@ -333,7 +333,7 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
         return context_data  # 오류 발생 시 기존 데이터 반환
 
 # 이력서 제목 생성
-def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
+def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
     try:
         # 제목 후보 가져오기
         title_candidates = project_title_candidate(gh_token, repo_url)
@@ -410,7 +410,7 @@ def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.pro
         }
 
 # 맡은 업무 생성        
-def generate_role_and_task(openai_api_key,code_summary, pr_summary, commit_summary, requirements, prompt=settings.role_and_task_prompt):
+def generate_role_and_task(openai_api_key, code_summary, pr_summary, commit_summary, requirements, prompt=settings.role_and_task_prompt):
     try:
         # 담당업무 생성
         print("Generating Role and Task...")
@@ -429,6 +429,7 @@ def generate_role_and_task(openai_api_key,code_summary, pr_summary, commit_summa
                  "content": (
                      "You are a professional assistant specializing in extracting roles and responsibilities from project data. "
                      "Your task is to identify the key responsibilities and actions taken by the user based on the provided summaries."
+                     "The response must be generated in **Korean**."
                  )},
                 {"role": "user", 
                  "content": (
@@ -446,11 +447,12 @@ def generate_role_and_task(openai_api_key,code_summary, pr_summary, commit_summa
         )
         # GPT 응답 파싱
         response_text = response.choices[0].message.parsed
+        # print(f"response_text: {response_text}, {type(response_text)}, {response_text.roleAndTask}, {type(response_text.roleAndTask)}")
         
         print("Parsed GPT response:", response_text)
 
         # Role and task 객체로 반환
-        return response_text
+        return response_text.roleAndTask
 
     except Exception as e:
         print(f"Error during summarization: {e}")
@@ -479,6 +481,7 @@ def generate_trouble_shooting(openai_api_key,code_summary, pr_summary, commit_su
                         "You are an experienced developer specializing in problem-solving. "
                         "Your task is to analyze the provided project summaries and identify one major issue faced during the project. "
                         "Then outline the hypothesis made to solve the issue, the actions taken, and the resulting improvements."
+                        "The response must be generated in **Korean**."
                     )
                 },
                 {"role": "user", 
@@ -511,10 +514,10 @@ def generate_trouble_shooting(openai_api_key,code_summary, pr_summary, commit_su
         return TroubleShootingDto(problem="", hypothesis="", tring="", result="")
     
 # STAR 기법 기반 생성  
-def generate_star_summary(openai_api_key, repo_data, issues_data, pr_summary, commit_summary, pr_data, commits_data, requirements, prompt=settings.star_prompt):
+def generate_star_summary(openai_api_key, repo_data, issues_data, pr_summary, commit_summary, requirements, prompt=settings.star_prompt):
     try:
         # 데이터 검증
-        if not repo_data and not issues_data and not pr_data and not commits_data:
+        if not repo_data and not issues_data and not pr_summary and not commit_summary:
             print("No data provided for STAR generation. Skipping...")
             return StarDto(situation= "", task = "", action = "", result = "")
 
@@ -532,6 +535,7 @@ def generate_star_summary(openai_api_key, repo_data, issues_data, pr_summary, co
                         "Each STAR element (Situation, Task, Action, Result) must be derived from specific types of data. "
                         "When possible, prioritize **quantifiable metrics or measurable outcomes** (e.g., performance improvement percentages, response time reductions, or user adoption rates) "
                         "to make the summary more impactful and data-driven."
+                        "The response must be generated in **Korean**."
                     )
                 },
                 {
@@ -544,13 +548,13 @@ def generate_star_summary(openai_api_key, repo_data, issues_data, pr_summary, co
                         f"- Topics: {repo_data.get('topics', 'No topics available')}\n\n"
                         "**Task** (해결해야 할 문제):\n"
                         f"- Issues: {issues_data}\n"
-                        f"- Pull Requests (Titles and Descriptions): {pr_data}\n\n"
+                        f"- Pull Requests (Titles and Descriptions): {pr_summary}\n\n"
                         "**Action** (취한 행동):\n"
-                        f"- Commit Diffs and Messages: {commits_data}\n"
-                        f"- Pull Request Changes: {pr_data}\n\n"
+                        f"- Commit Diffs and Messages: {commit_summary}\n"
+                        f"- Pull Request Changes: {pr_summary}\n\n"
                         "**Result** (결과와 성과):\n"
-                        f"- Completed Issues and Merged PRs: {pr_data}\n"
-                        f"- Commit Performance Metrics: {commits_data}\n"
+                        f"- Completed Issues and Merged PRs: {pr_summary}\n"
+                        f"- Commit Performance Metrics: {commit_summary}\n"
                         f"- Project Outcome (if mentioned in README): {repo_data.get('readme', '')}\n\n"
                         "Generate the STAR summary in the following format:\n"
                         "- **Situation**: [Background and goals]\n"

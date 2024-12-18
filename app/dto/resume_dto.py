@@ -1,5 +1,7 @@
 from pydantic import BaseModel, HttpUrl
-from typing import List, Optional
+from typing import List, Optional, Union
+from app.dto.resume_modify_dto import StarDto, TroubleShootingDto
+
 
 # 요청 데이터 모델
 class ResumeRequest(BaseModel):
@@ -10,17 +12,23 @@ class ResumeRequest(BaseModel):
     requirements: str
     template: str
 
-# 응답 데이터 모델 - 프로젝트 정보
+# 응답 데이터 모델 - 프로젝트 정보(공통DTO)
 class Project(BaseModel):
     projectName: str
     projectStartedAt: str  # YYYY-MM-DD 형식
     projectEndedAt: str  # YYYY-MM-DD 형식
     skillSet: str
+    roleAndTask: List[str] # BASIC 템플릿에서 사용  
     repoLink: HttpUrl
     # 선택적 필드
-    projectDescription: Optional[str] = None # 자율 생성 템플릿
-    roleAndTask: Optional[List[str]] = None  # BASIC 템플릿에서 사용   
-    troubleShooting: Optional[str] = None   # STAR 템플릿에서 사용
+    # projectDescription: Optional[str] = None # 자율 생성 템플릿    
+    # troubleShooting: Optional[str] = None   # STAR 템플릿에서 사용
+    # star : Optional[str] = None
+    
+class StarProject(Project):
+    star: StarDto
+class GitfolioProject(Project):
+    troubleShooting: TroubleShootingDto
 
 # gpt 프로젝트 요약문, json형태
 class GptProject(BaseModel):
@@ -35,6 +43,36 @@ class GptAboutmeTechstack(BaseModel):
 
 # 응답 데이터 모델 - 전체 이력서
 class ResumeResponse(BaseModel):
-    projects: List[Project]
+    template: str
     techStack: List[str]
     aboutMe: str
+    projects: List[Union[Project, StarProject, GitfolioProject]]
+    # roleAndTask: Optional[List[str]] = None  # BASIC 템플릿에서 사용   
+    # troubleShooting: Optional[str] = None   # gitfolio 템플릿에서 사용
+    # star: Optional[str] = None # star 템플릿에서 사용
+    
+    
+# 이력서 양식 별 dto   
+# class BasicDto(BaseModel):
+#     template: str
+#     projects: List[Project]
+#     techStack:List[str]
+#     aboutMe: str
+    
+# class star_dto(BaseModel):
+#     template: str
+#     projects: List[Project]
+#     techStack:List[str]
+#     aboutMe: str
+    
+# class gitfolio_dto(BaseModel):
+#     template: str
+#     projects: List[Project]
+#     techStack:List[str]
+#     aboutMe: str
+    
+# class freedom_dto(BaseModel):
+#     template: str
+#     projects: List[Project]
+#     techStack: List[str]
+#     aboutMe: str

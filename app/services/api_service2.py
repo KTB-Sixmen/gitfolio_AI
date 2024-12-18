@@ -1,13 +1,13 @@
-from app.dto.resume_dto import Project, StarProject, GitfolioProject
-from app.services.github_service import get_combined_pr_text, get_combined_commit_diffs, get_commit_dates, clone_and_extract_files, delete_cloned_repo_from_url, get_issues_data, get_repository_data
-from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson, generate_role_and_task, generate_star_summary, generate_trouble_shooting
+from app.dto.resume_dto import Project
+from app.services.github_service import get_combined_pr_text, get_combined_commit_diffs, get_commit_dates, clone_and_extract_files, delete_cloned_repo_from_url
+from app.services.gpt_service import  slice_and_summarize, final_summarization, generate_project_summary, generate_project_summary_byJson, simplify_project_summary_byJson
 from app.services.data_service import save_summaries_to_file
 from app.config.settings import settings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 
 # 병렬로 레포지토리를 처리하고 요약을 반환하는 함수
-def process_repository(template, repo_url, githubID, githubName, requirements):
+def process_repository(repo_url, githubID, githubName, requirements):
     try:
         with ThreadPoolExecutor() as executor:
             all_code = clone_and_extract_files(repo_url)
@@ -35,60 +35,19 @@ def process_repository(template, repo_url, githubID, githubName, requirements):
         project_summary = create_project_summary(final_code_summary, final_pr_summary, final_commit_summary, githubID, repo_url, requirements)
         simplified_summary = simplify_project_info(project_summary, requirements)
         first_commit_date, latest_commit_date = create_repo_start_end_date(repo_url)
-        
-        # STAR 템플릿인 경우에만 추가 데이터 가져오기
-        if template == "STAR":
-            repo_data = get_repository_data(settings.gh_token, str(repo_url))
-            issues_data = get_issues_data(settings.gh_token, str(repo_url))
-            star = create_star_summary(settings.openai_api_key, repo_data, issues_data, final_pr_summary, final_commit_summary, requirements)
-        else:
-            repo_data = None
-            issues_data = None
-            star = None
-        
-        # 내가 한 작업
-        role_and_task = create_role_and_task(settings.openai_api_key, final_code_summary, final_pr_summary, final_commit_summary, requirements)
-        # star = create_star_summary(settings.openai_api_key,repo_data, issues_data, final_pr_summary, final_commit_summary, requirements)
-        trouble_shooting = create_trouble_shooting(settings.openai_api_key, final_code_summary, final_pr_summary, final_commit_summary, requirements)
-        
         delete_cloned_repo_from_url(repo_url)
-        
-        # 템플릿 별 데이터 분기 처리
-        
+
         project_summary += f"\n\n### 프로젝트 요약\n {simplified_summary.projectDescription}**"
 
-        if template == "BASIC":
-            project_data = Project(
-                projectName=simplified_summary.projectName, 
-                projectStartedAt=first_commit_date, 
-                projectEndedAt=latest_commit_date,  
-                skillSet=simplified_summary.skillSet,
-                roleAndTask=role_and_task,
-                repoLink=repo_url
-            )
-        elif template == "STAR":
-            project_data = StarProject(
-                projectName=simplified_summary.projectName, 
-                projectStartedAt=first_commit_date, 
-                projectEndedAt=latest_commit_date,  
-                skillSet=simplified_summary.skillSet,
-                roleAndTask=role_and_task,
-                repoLink=repo_url,
-                star=star
-            )
-        elif template == "GITFOLIO":
-                project_data = GitfolioProject(
-                projectName=simplified_summary.projectName, 
-                projectStartedAt=first_commit_date, 
-                projectEndedAt=latest_commit_date,  
-                skillSet=simplified_summary.skillSet,
-                roleAndTask=role_and_task,
-                repoLink=repo_url,
-                troubleShooting=trouble_shooting
-            )
-        
-        print("process_repository 반환값 확인:", project_data) 
-        return project_data
+        project_summary = Project(
+            projectName=simplified_summary.projectName, 
+            projectStartedAt=first_commit_date, 
+            projectEndedAt=latest_commit_date,  
+            skillSet=simplified_summary.skillSet,
+            projectDescription=project_summary,
+            repoLink=repo_url
+        )
+        return project_summary
 
     except Exception as e:
         logging.error(f"Error in processing repository {repo_url}: {e}")
@@ -132,19 +91,3 @@ def simplify_project_info(project_summary, requirements):
 def create_repo_start_end_date(repo_url):
     first_commit_date, latest_commit_date = get_commit_dates(settings.gh_token, repo_url)
     return first_commit_date, latest_commit_date
-
-# 맡은 역할 생성
-def create_role_and_task(openai_api_key, code_summary, pr_summary, commit_summary, requirements):
-    role_and_task = generate_role_and_task(openai_api_key, code_summary, pr_summary, commit_summary, requirements)
-    return role_and_task
-
-# star 기법으로 생성
-def create_star_summary(openai_api_key, repo_data, issues_data, pr_summary, commit_summary, requirements):
-    star = generate_star_summary(openai_api_key, repo_data, issues_data, pr_summary, commit_summary, requirements)
-    return star
-
-# 트러블 슈팅 생성
-def create_trouble_shooting(openai_api_key, code_summary, pr_summary, commit_summary, requirements):
-    trouble_shooting = generate_trouble_shooting(openai_api_key, code_summary, pr_summary, commit_summary, requirements)
-    return trouble_shooting
-
