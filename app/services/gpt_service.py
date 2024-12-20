@@ -1,7 +1,6 @@
 from openai import OpenAI
 from app.config.settings import settings
-from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
+from app.dto.resume_dto import GptProject, ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -293,9 +292,10 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
                 {
                     "role": "system",
                     "content": (
-                        "You are a friendly and professional resume modification expert."
-                        "Your task is to update only the specified sections of the resume based on the user's request while leaving all other parts unchanged." 
-                        "Ensure the modifications are concise, professional, and aligned with the tone of the original resume."
+                        "You are a professional resume modification assistant. Your task is to update only the `selected_text` "
+                        "based on the user's request while leaving all other fields in the context completely unchanged. "
+                        "You are forbidden from changing any part of the context or other values besides the `selected_text`."
+                        "Ensure that the updated text aligns with the style and tone of the original text."
                     )
                 },
                 {
