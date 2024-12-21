@@ -1,4 +1,4 @@
-FROM python:3.12-alpine
+FROM --platform=linux/amd64 python:3.12-alpine
 
 # 작업 디렉토리 설정
 WORKDIR /app
