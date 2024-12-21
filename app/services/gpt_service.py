@@ -1,7 +1,7 @@
 from openai import OpenAI
 from app.config.settings import settings
 from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto
+from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -269,6 +269,7 @@ def generate_aboutme(openai_api_key, prompt=settings.aboutme_prompt):
         print(f"Error generating About Me: {e}")
         return ""
     
+# 이력서 수정    
 def resume_update(openai_api_key, requirements, selected_text, context_data, prompt=settings.resume_update_prompt) :
     try:
         # 선택된 텍스트가 없을 때 처리
@@ -331,7 +332,8 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
         print(f"Error modifying resume with GPT: {e}")
         return context_data  # 오류 발생 시 기존 데이터 반환
 
-def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
+# 이력서 제목 생성
+def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
     try:
         # 제목 후보 가져오기
         title_candidates = project_title_candidate(gh_token, repo_url)
@@ -406,3 +408,176 @@ def create_project_title(openai_api_key, gh_token, repo_url, prompt=settings.pro
                 "title_candidate_3": ""
             }
         }
+
+# 맡은 업무 생성        
+def generate_role_and_task(openai_api_key, code_summary, pr_summary, commit_summary, requirements, prompt=settings.role_and_task_prompt):
+    try:
+        # 담당업무 생성
+        print("Generating Role and Task...")
+        
+        # 어떤 정보를 가져올건지 로직 구현
+        if not code_summary.strip() and not pr_summary.strip() and not commit_summary.strip():  # 텍스트가 비어 있는 경우 처리
+            print("No text provided for summarization. Skipping...")
+            return
+                
+        # gpt 호출
+        client = OpenAI(api_key=openai_api_key)
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {"role": "system", 
+                 "content": (
+                     "You are a professional assistant specializing in extracting roles and responsibilities from project data. "
+                     "Your task is to identify the key responsibilities and actions taken by the user based on the provided summaries."
+                     "The response must be generated in **Korean**."
+                 )},
+                {"role": "user", 
+                 "content": (
+                     f"Analyze the following data and extract the main roles and responsibilities:\n\n"
+                     f"### Code Summary:\n{code_summary}\n\n"
+                     f"### PR Summary:\n{pr_summary}\n\n"
+                     f"### Commit Summary:\n{commit_summary}\n\n"
+                     f"### Requirements:\n{requirements}\n\n"
+                     "Please provide the roles and responsibilities in a concise list format."
+                 )},
+                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=RoleAndTaskDto,
+        )
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+        # print(f"response_text: {response_text}, {type(response_text)}, {response_text.roleAndTask}, {type(response_text.roleAndTask)}")
+        
+        print("Parsed GPT response:", response_text)
+
+        # Role and task 객체로 반환
+        return response_text.roleAndTask
+
+    except Exception as e:
+        print(f"Error during summarization: {e}")
+        return RoleAndTaskDto(roleAndTask="")
+
+# 트러블 슈팅 생성    
+def generate_trouble_shooting(openai_api_key,code_summary, pr_summary, commit_summary, requirements, prompt=settings.trouble_shooting_prompt):
+    try:
+        # 담당업무 생성
+        print("Generating Troubleshooting...")
+        
+        # 어떤 정보를 가져올건지 로직 구현
+        if not code_summary.strip() and not pr_summary.strip() and not commit_summary.strip():  # 텍스트가 비어 있는 경우 처리
+            print("No text provided for summarization. Skipping...")
+            return TroubleShootingDto(problem="", hypothesis="", tring="", result="")
+
+                
+        # gpt 호출
+        client = OpenAI(api_key=openai_api_key)
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {                    
+                 "role": "system",
+                    "content": (
+                        "You are an experienced developer specializing in problem-solving. "
+                        "Your task is to analyze the provided project summaries and identify one major issue faced during the project. "
+                        "Then outline the hypothesis made to solve the issue, the actions taken, and the resulting improvements."
+                        "The response must be generated in **Korean**."
+                    )
+                },
+                {"role": "user", 
+                    "content": (
+                        f"Analyze the following summaries:\n\n"
+                        f"### Code Summary:\n{code_summary}\n\n"
+                        f"### PR Summary:\n{pr_summary}\n\n"
+                        f"### Commit Summary:\n{commit_summary}\n\n"
+                        f"### Requirements:\n{requirements}\n\n"
+                        "Provide a detailed response in the following format:\n"
+                        "- Problem: [Describe the issue]\n"
+                        "- Hypothesis: [State the hypothesis or approach]\n"
+                        "- Tring: [Describe the actions taken]\n"
+                        "- Result: [Explain the improvement achieved with quantifiable metrics if possible]"
+                 )
+                },
+                {"role": "assistant", "content": f"{prompt}, focus on {requirements}"}
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=TroubleShootingDto,
+        )
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+
+        # Role and task 객체로 반환
+        return response_text
+
+    except Exception as e:
+        print(f"Error during summarization: {e}")
+        return TroubleShootingDto(problem="", hypothesis="", tring="", result="")
+    
+# STAR 기법 기반 생성  
+def generate_star_summary(openai_api_key, repo_data, issues_data, pr_summary, commit_summary, requirements, prompt=settings.star_prompt):
+    try:
+        # 데이터 검증
+        if not repo_data and not issues_data and not pr_summary and not commit_summary:
+            print("No data provided for STAR generation. Skipping...")
+            return StarDto(situation= "", task = "", action = "", result = "")
+
+        print("star기법으로 프로젝트를 요약합니다...")
+
+        # beta, parse형태로 구성됨. 주기적으로 공식문서 업데이트 확인할것
+        client = OpenAI(api_key=openai_api_key)
+        response = client.beta.chat.completions.parse(
+            model=settings.gpt_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an experienced developer tasked with generating a STAR-based project summary. "
+                        "Each STAR element (Situation, Task, Action, Result) must be derived from specific types of data. "
+                        "When possible, prioritize **quantifiable metrics or measurable outcomes** (e.g., performance improvement percentages, response time reductions, or user adoption rates) "
+                        "to make the summary more impactful and data-driven."
+                        "The response must be generated in **Korean**."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Generate a STAR summary using the provided data. Use the following data sources for each element:\n\n"
+                        "**Situation** (프로젝트의 목표와 배경):\n"
+                        f"- README: {repo_data.get('readme', 'No README provided')}\n"
+                        f"- Description: {repo_data.get('description', 'No description provided')}\n"
+                        f"- Topics: {repo_data.get('topics', 'No topics available')}\n\n"
+                        "**Task** (해결해야 할 문제):\n"
+                        f"- Issues: {issues_data}\n"
+                        f"- Pull Requests (Titles and Descriptions): {pr_summary}\n\n"
+                        "**Action** (취한 행동):\n"
+                        f"- Commit Diffs and Messages: {commit_summary}\n"
+                        f"- Pull Request Changes: {pr_summary}\n\n"
+                        "**Result** (결과와 성과):\n"
+                        f"- Completed Issues and Merged PRs: {pr_summary}\n"
+                        f"- Commit Performance Metrics: {commit_summary}\n"
+                        f"- Project Outcome (if mentioned in README): {repo_data.get('readme', '')}\n\n"
+                        "Generate the STAR summary in the following format:\n"
+                        "- **Situation**: [Background and goals]\n"
+                        "- **Task**: [Challenges and problems solved]\n"
+                        "- **Action**: [Actions taken to address the tasks]\n"
+                        "- **Result**: [Results with measurable outcomes or improvements]"
+                    )
+                },
+                {
+                    "role": "assistant",
+                    "content": f"Focus on: {requirements}\n{prompt}"
+                }
+            ],
+            max_tokens=settings.max_output_tokens,
+            response_format=StarDto,
+        )
+
+        # GPT 응답 파싱
+        response_text = response.choices[0].message.parsed
+
+        # GptProject 객체로 반환
+        return response_text
+
+    except Exception as e:
+        print(f"An error occurred while simplifying the summary: {e}")
+        return StarDto(situation= "", task = "", action = "", result = "")
