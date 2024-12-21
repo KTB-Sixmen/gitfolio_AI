@@ -1,4 +1,5 @@
 import os
+import json
 from app.config.settings import settings
 
 # 폴더 경로 생성 함수
@@ -31,3 +32,71 @@ def save_summaries_to_file(summary, githubID, repo_url, output_folder=settings.d
             f.write("="*50 + "\n")
     except Exception as e:
         print(f"Error saving code summary to file: {e}")
+  
+# 수정된 내용의 value 찾기      
+def find_field_for_text(context_data: dict, selected_text: str) -> list:
+    matching_fields = []
+
+    def search_field(data, path=""):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                # print(f"딕셔너리 탐색 중: 현재 키 = {key}, 현재 경로 = {path}")
+                search_field(value, f"{path}.{key}" if path else key)
+        elif isinstance(data, list):
+            for idx, item in enumerate(data):
+                # print(f"리스트 탐색 중: 현재 인덱스 = {idx}, 현재 경로 = {path}")
+                search_field(item, f"{path}[{idx}]")
+        else:
+            # print(f"Checking value: {data} at Path: {path}")
+            if data == selected_text:
+                print(f"선택된 텍스트와 일치: 경로 = {path}")
+                matching_fields.append(path)
+
+    search_field(context_data)
+    print(f"최종 매칭된 경로: {matching_fields}")
+    return matching_fields
+
+# 경로에 해당하는 필드 업데이트
+def update_field_by_path(context_data: dict, path: str, new_value):
+    print(f"필드 업데이트 시작: 경로 = {path}, 새 값 = {new_value}")
+
+    # new_value가 Pydantic 객체인 경우 직렬화
+    if hasattr(new_value, 'dict'):
+        new_value = new_value.dict()
+    elif hasattr(new_value, 'json'):
+        new_value = json.loads(new_value.json())
+
+    keys = path.replace("[", ".").replace("]", "").split(".")
+    current = context_data
+    
+
+    for key in keys[:-1]:
+        if key.isdigit():  # 리스트 인덱스 처리
+            current = current[int(key)]
+        else:
+            current = current[key]
+
+    last_key = keys[-1]
+    print(f"최종 업데이트할 키: {last_key}")
+    if last_key.isdigit():
+        current[int(last_key)] = new_value
+    else:
+        current[last_key] = new_value
+        
+    print(f"업데이트 완료! 최종 데이터:\n{json.dumps(context_data, indent=4, ensure_ascii=False)}")
+
+def get_value_by_path(data: dict, path: str):
+    """
+    경로(path)를 따라 데이터에서 값을 가져옵니다.
+    """
+    keys = path.replace("[", ".").replace("]", "").split(".")
+    current = data
+
+    for key in keys:
+        if isinstance(current, list) and key.isdigit():
+            current = current[int(key)]
+        elif isinstance(current, dict):
+            current = current.get(key)
+        else:
+            return None  # 경로가 잘못된 경우 None 반환
+    return current
