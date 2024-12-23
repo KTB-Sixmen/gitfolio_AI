@@ -20,8 +20,19 @@ class Project(BaseModel):
     projectEndedAt: str  # YYYY-MM-DD 형식
     skillSet: str
     roleAndTask: List[str] # BASIC 템플릿에서 사용  
-    repoLink: str
+    repoLink: Union[HttpUrl, str]
 
+
+class ProjectUpdate(BaseModel):
+    # type: str
+    type: Literal['BASIC'] = "BASIC"
+    projectName: str
+    projectStartedAt: str  # YYYY-MM-DD 형식
+    projectEndedAt: str  # YYYY-MM-DD 형식
+    skillSet: str
+    roleAndTask: List[str] # BASIC 템플릿에서 사용  
+    repoLink: str
+    
 class StarDto(BaseModel):
     situation: str
     task: str
@@ -48,11 +59,21 @@ class StarProject(Project):
     type: Literal['STAR'] = "STAR"
     star: StarDto
     
+class StarProjectUpdate(ProjectUpdate):
+    # type: str = "STAR"
+    type: Literal['STAR'] = "STAR"
+    star: StarDto
+    
 class GitfolioProject(Project):
     # type: str = "GITFOLIO"
     type: Literal['GITFOLIO'] = "GITFOLIO"
     troubleShooting: TroubleShootingDto
 
+class GitfolioProjectUpdate(ProjectUpdate):
+    # type: str = "GITFOLIO"
+    type: Literal['GITFOLIO'] = "GITFOLIO"
+    troubleShooting: TroubleShootingDto
+    
 # gpt 프로젝트 요약문, json형태
 class GptProject(BaseModel):
     projectName: str
@@ -86,7 +107,7 @@ class ProjectResponse(BaseModel):
     projectEndedAt: str  # YYYY.MM 형식
     skillSet: str
     projectDescription: str
-    repoLink: str
+    repoLink: Union[HttpUrl, str]
     
 class Link(BaseModel):
     linkTitle: str
@@ -120,7 +141,7 @@ class ResumeResponseDto(BaseModel):
     tags: Optional[List[str]]  # null 가능
     workExperiences: List[WorkExperience]
     # projects: List[ProjectResponse]
-    projects: List[Union[Project, StarProject, GitfolioProject]]
+    projects: List[Union[ProjectUpdate, StarProjectUpdate, GitfolioProjectUpdate]]
     links: Optional[List[Link]]  # null 가능
     educations: List[Education]
     certificates: List[Certificate]
