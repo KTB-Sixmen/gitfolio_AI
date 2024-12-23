@@ -1,7 +1,7 @@
 services:
   ai:
     platform: linux/amd64
-    image: 727646500036.dkr.ecr.ap-northeast-2.amazonaws.com/gitfolio/ai:dev
+    image: 727646500036.dkr.ecr.ap-northeast-2.amazonaws.com/gitfolio/ai:prod
     container_name: gitfolio_ai
     ports:
       - target: 8000

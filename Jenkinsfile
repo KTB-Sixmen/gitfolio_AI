@@ -18,7 +18,9 @@ pipeline {
                     {
                         "embeds": [{
                             "title": "🚀 파이프라인 시작",
-                            "description": "빌드 #${env.BUILD_NUMBER}가 시작되었습니다.\\n브랜치: feature/cicd\\n깃트폴리오 AI 서버 빌드 프로세스를 시작합니다.",
+                            echo "ECR Registry: ${ECR_REGISTRY}",
+                            echo "Docker Image Tag: ${DOCKER_IMAGE}",
+                            "description": "빌드 #${env.BUILD_NUMBER}가 시작되었습니다.\\n브랜치: feature/ai-cicd\\n깃트폴리오 AI 서버 빌드 프로세스를 시작합니다.",
                             "color": 16776960,
                             "timestamp": "${new Date().format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", TimeZone.getTimeZone('UTC'))}"
                         }]
@@ -40,7 +42,7 @@ pipeline {
                     {
                         "embeds": [{
                             "title": "📥 소스 코드 체크아웃",
-                            "description": "깃허브 저장소에서 소스 코드를 가져오고 있습니다.\\n저장소: KTB-Sixmen/gitfolio_AI\\n브랜치: feature/cicd",
+                            "description": "깃허브 저장소에서 소스 코드를 가져오고 있습니다.\\n저장소: KTB-Sixmen/gitfolio_AI\\n브랜치: feature/ai-cicd,
                             "color": 65280,
                             "timestamp": "${new Date().format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", TimeZone.getTimeZone('UTC'))}"
                         }]
@@ -53,7 +55,7 @@ pipeline {
                     """
 
                     deleteDir()
-                    git branch: 'feature/cicd',
+                    git branch: 'feature/ai-cicd',
                         url: 'https://github.com/KTB-Sixmen/gitfolio_AI.git'
                 }
             }
