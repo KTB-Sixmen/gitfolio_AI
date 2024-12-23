@@ -1,7 +1,7 @@
 from openai import OpenAI
+import anthropic
 from app.config.settings import settings
-from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
+from app.dto.resume_dto import GptProject, ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -293,9 +293,9 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
                 {
                     "role": "system",
                     "content": (
-                        "You are a friendly and professional resume modification expert."
-                        "Your task is to update only the specified sections of the resume based on the user's request while leaving all other parts unchanged." 
-                        "Ensure the modifications are concise, professional, and aligned with the tone of the original resume."
+                        "You are a professional resume modification assistant. Your task is to update only the `selected_text` "
+                        "Ensure that the updated text aligns with the style and tone of the original text."
+                        "한글로 작성해주세요."
                     )
                 },
                 {
@@ -305,11 +305,9 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
                         f"{json.dumps(context_data, indent=4)}\n\n"
                         "Selected Text:\n"
                         f"{selected_text}\n\n"
-                        # "Key Path:\n"
-                        # f"{key_path}\n\n"
                         "User Request:\n"
                         f"{requirements}\n\n"
-                        "Please update the selected text based on the instructions provided."
+                        "User Request에 맞게 선택된 텍스트를 수정해주세요."
                     )
                 },
                 {
@@ -332,6 +330,49 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
         print(f"Error modifying resume with GPT: {e}")
         return context_data  # 오류 발생 시 기존 데이터 반환
 
+def generate_resume_update(anthropic_api_key, requirements, selected_text, context_data, prompt):
+    try:
+        # 선택된 텍스트가 없을 때 처리
+        if not selected_text or not selected_text.strip():
+            print("Error: Selected text is empty or missing.")
+            return context_data  # 오류 발생 시 기존 데이터 반환
+
+        # 수정 요구사항이 없을 때 처리
+        if not requirements or not requirements.strip():
+            print("Error: User request (requirements) is empty or missing.")
+            return context_data  # 오류 발생 시 기존 데이터 반환
+
+        # 수정 요청
+        print("이력서 수정")
+
+        # Anthropic API 호출
+        client = anthropic.Anthropic(api_key=anthropic_api_key)
+        response = client.completions.create(
+            model="claude-3.5",
+            max_tokens_to_sample=500,
+            temperature=0.7,
+            prompt=(
+                f"You are a professional resume modification assistant. Your task is to update the following `selected_text` "
+                f"based on the `requirements` provided, considering the `context_data`. "
+                f"Ensure that the updated text aligns with the style and tone of the original text.\n\n"
+                f"Context Data:\n{json.dumps(context_data, indent=4)}\n\n"
+                f"Selected Text:\n{selected_text}\n\n"
+                f"User Request:\n{requirements}\n\n"
+                f"Sample summary format: {prompt}.\n\n"
+                f"Please update the selected text based on the instructions provided."
+            )
+        )
+
+        # 응답 텍스트 추출
+        response_text = response.completion.strip()
+
+        # 업데이트된 이력서 반환
+        return response_text
+
+    except Exception as e:
+        print(f"Error modifying resume with Claude: {e}")
+        return context_data  # 오류 발생 시 기존 데이터 반환
+    
 # 이력서 제목 생성
 def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
     try:

@@ -64,11 +64,12 @@ ABOUTME_PROMPT = (
 )
 # 이력서 재생성
 RESUME_UPDATE_PROMPT = (
-    "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
-        "Update the provided `selected_text` based on the user's request. "
-        "Modify only the specified text, and ensure the updated text aligns with the tone and style of the surrounding context. "
-        "Return only the modified text without altering the structure or other parts of the resume."
+    "You are a professional resume editor. Your task is to modify only the specified text within the resume. "
+    "Focus exclusively on the `selected_text` and apply the user's request strictly. "
+    "Make sure your modifications are concise, professional, and match the tone and style of the original text. "
+    # "Return only the updated value for the `selected_text` without altering the structure, keys, or other values in the JSON."
 )
+
 # 프로젝트 이름 생성
 PROJECT_TITLE_PROMPT = (
     
@@ -76,6 +77,7 @@ PROJECT_TITLE_PROMPT = (
     "Do not include any additional explanation, formatting, or context. "
     "Only provide the title itself."
 )
+
 # 맡은 업무 생성
 ROLE_AND_TASK_PROMPT = (
     "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
@@ -96,14 +98,14 @@ ROLE_AND_TASK_PROMPT = (
 # 트러블슈팅 생성
 TROUBLE_SHOOTING_PROMPT = (
     "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
+    "The output should be concise, with 1-2 sentences summarizing the troubleshooting steps and resolution."
 )
 
-# star기법 기반 생성
 STAR_PROMPT = (
     "Do not use code blocks (```), but markdown formatting such as bold or lists is allowed. Provide plain text instead of code blocks."
-        "The output should be generated in the following format:\n\n"
-        "- **Situation**: [Background and goals of the project]\n"
-        "- **Task**: [Challenges or problems addressed]\n"
-        "- **Action**: [Specific actions taken to solve the problem]\n"
-        "- **Result**: [Outcomes and improvements, including measurable metrics if possible]"
+    "The output should be generated in the following format:\n\n"
+    "- **Situation**: [1 sentence describing the background and goals of the project]\n"
+    "- **Task**: [1 sentence summarizing the challenges or problems addressed]\n"
+    "- **Action**: [1 sentence explaining the specific actions taken to solve the problem]\n"
+    "- **Result**: [1 sentence describing the outcomes and improvements, including measurable metrics if possible]"
 )
