@@ -22,7 +22,7 @@ pipeline {
                     {
                         "embeds": [{
                             "title": "🚀 파이프라인 시작",
-                            "description": "빌드 #${env.BUILD_NUMBER}가 시작되었습니다.\\n브랜치: ${env.GIT_BRANCH ?: 'develop'}\\n깃트폴리오 AI 서버 빌드 프로세스를 시작합니다.",
+                            "description": "빌드 #${env.BUILD_NUMBER}가 시작되었습니다.\\n브랜치: ${env.GIT_BRANCH ?: 'feature/cicd'}\\n깃트폴리오 AI 서버 빌드 프로세스를 시작합니다.",
                             "color": 16776960,
                             "timestamp": "${new Date().format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", TimeZone.getTimeZone('UTC'))}"
                         }]
@@ -93,7 +93,7 @@ pipeline {
                     """
 
                     // Git 체크아웃 수행
-                    git branch: 'develop',
+                    git branch: 'feature/cicd',
                         url: 'https://github.com/KTB-Sixmen/gitfolio_AI.git'
                 }
             }
