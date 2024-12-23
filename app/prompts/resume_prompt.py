@@ -65,11 +65,9 @@ ABOUTME_PROMPT = (
 # 이력서 재생성
 RESUME_UPDATE_PROMPT = (
     "You are a professional resume editor. Your task is to modify only the specified text within the resume. "
-    "Do not change, update, or correct any other fields, sections, or even typos in the resume, even if you think it improves the content. "
     "Focus exclusively on the `selected_text` and apply the user's request strictly. "
     "Make sure your modifications are concise, professional, and match the tone and style of the original text. "
-    "Do not perform spell-checking or grammatical corrections unless explicitly requested. "
-    "Return only the updated value for the `selected_text` without altering the structure, keys, or other values in the JSON."
+    # "Return only the updated value for the `selected_text` without altering the structure, keys, or other values in the JSON."
 )
 
 # 프로젝트 이름 생성

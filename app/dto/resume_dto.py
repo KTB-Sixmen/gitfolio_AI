@@ -136,24 +136,13 @@ class updateResumeDto(BaseModel):
     techStack: List[str]
     aboutMe: str
     tags: Optional[List[str]]  # null 가능
-    workExperiences: List[WorkExperience] 
-    type: Literal['BASIC'] = "BASIC"
-    projectName: str
-    projectStartedAt: str  # YYYY-MM-DD 형식
-    projectEndedAt: str  # YYYY-MM-DD 형식
-    skillSet: str
+    workExperiences: List[WorkExperience]
+    projects: List[Union[Project, StarProject, GitfolioProject]]  # 추가된 필드
     links: Optional[List[Link]]  # null 가능
     educations: List[Education]
     certificates: List[Certificate]
-    roleAndTask: List[str] # BASIC 템플릿에서 사용
-      
-    repoLink: str   
-    star: Optional[StarDto]
-    troubleShooting: Optional[TroubleShootingDto]
     
 class UpdateRequestDto(BaseModel):
     selectedText: str
     requirement: str
     resumeInfo: updateResumeDto
-    
-    

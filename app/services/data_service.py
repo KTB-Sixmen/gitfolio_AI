@@ -48,8 +48,8 @@ def find_field_for_text(context_data: dict, selected_text: str) -> list:
                 search_field(item, f"{path}[{idx}]")
         else:
             # print(f"Checking value: {data} at Path: {path}")
-            if data == selected_text:
-                print(f"선택된 텍스트와 일치: 경로 = {path}")
+            if isinstance(data, str) and selected_text in data:
+                print(f"선택된 텍스트 포함: 경로 = {path}")
                 matching_fields.append(path)
 
     search_field(context_data)
@@ -57,17 +57,17 @@ def find_field_for_text(context_data: dict, selected_text: str) -> list:
     return matching_fields
 
 # 경로에 해당하는 필드 업데이트
-def update_field_by_path(context_data: dict, path: str, new_value):
-    print(f"필드 업데이트 시작: 경로 = {path}, 새 값 = {new_value}")
+def update_field_by_path(original_data: dict, path: str, updated_value):
+    print(f"필드 업데이트 시작: 경로 = {path}, 새 값 = {updated_value}")
 
-    # new_value가 Pydantic 객체인 경우 직렬화
-    if hasattr(new_value, 'dict'):
-        new_value = new_value.dict()
-    elif hasattr(new_value, 'json'):
-        new_value = json.loads(new_value.json())
+    # updated_value가 Pydantic 객체인 경우 직렬화
+    if hasattr(updated_value, 'dict'):
+        updated_value = updated_value.dict()
+    elif hasattr(updated_value, 'json'):
+        updated_value = json.loads(updated_value.json())
 
     keys = path.replace("[", ".").replace("]", "").split(".")
-    current = context_data
+    current = original_data
     
 
     for key in keys[:-1]:
@@ -79,11 +79,11 @@ def update_field_by_path(context_data: dict, path: str, new_value):
     last_key = keys[-1]
     print(f"최종 업데이트할 키: {last_key}")
     if last_key.isdigit():
-        current[int(last_key)] = new_value
+        current[int(last_key)] = updated_value
     else:
-        current[last_key] = new_value
+        current[last_key] = updated_value
         
-    print(f"업데이트 완료! 최종 데이터:\n{json.dumps(context_data, indent=4, ensure_ascii=False)}")
+    print(f"업데이트 완료! 최종 데이터:\n{json.dumps(original_data, indent=4, ensure_ascii=False)}")
 
 def get_value_by_path(data: dict, path: str):
     """
