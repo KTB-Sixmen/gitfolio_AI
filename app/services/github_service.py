@@ -275,14 +275,13 @@ def get_github_profile_and_repos(gh_token):
         print(f"Error while fetching GitHub profile and repositories: {e}")
         return "사용자 GitHub 프로필 요약 정보가 없습니다.", "사용자 GitHub 프로젝트 정보를 가져올 수 없습니다."
 
-# 프로젝트 제목 생성 정보
 def project_title_candidate(gh_token, repo_url):
     try:
         # GitHub API 클라이언트 초기화
         g = Github(gh_token)
 
         # 레포지토리 이름 추출
-        repo_name = "/".join(repo_url.rstrip('/').split('/')[-2:])
+        repo_name = "/".join(str(repo_url).rstrip('/').split('/')[-2:])
         repo = g.get_repo(repo_name)
         
         # 제목 후보 1: 레포지토리 이름
@@ -292,13 +291,14 @@ def project_title_candidate(gh_token, repo_url):
         # 제목 후보 2: README 첫 줄
         try:
             readme_content = repo.get_readme().decoded_content.decode("utf-8")
-            title_candidate_2 = readme_content.splitlines()[0] if readme_content else ""
+            # 첫 줄 가져오고 '#' 및 앞뒤 공백 제거
+            title_candidate_2 = readme_content.splitlines()[0].lstrip('#').strip() if readme_content else ""
             print(f"Title Candidate 2 (README First Line): {title_candidate_2}")
         except Exception as e:
             print(f"Error fetching README content: {e}")
             title_candidate_2 = ""
             
-        # 제목 후보 3 : topic
+        # 제목 후보 3: topic
         try:
             topics = repo.get_topics()  # 토픽 리스트 가져오기
             title_candidate_3 = ", ".join(topics) if topics else ""
@@ -307,11 +307,15 @@ def project_title_candidate(gh_token, repo_url):
             print(f"Error fetching topics: {e}")
             title_candidate_3 = ""
             
-        return title_candidate_1, title_candidate_2, title_candidate_3
+        return {
+            "title_candidate_1": title_candidate_1,
+            "title_candidate_2": title_candidate_2,
+            "title_candidate_3": title_candidate_3,
+        }
 
     except Exception as e:
         print(f"Error creating project name: {e}")
-        return "프로젝트 제목을 생성할 수 없습니다."
+        return {"title_candidate_1": "", "title_candidate_2": "", "title_candidate_3": ""}
 
 # star기법에 사용될 깃허브 데이터    
 def get_repository_data(gh_token, repo_url):

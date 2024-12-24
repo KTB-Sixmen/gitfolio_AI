@@ -35,7 +35,7 @@ def process_repository(template, repo_url, githubID, githubName, requirements):
         project_summary = create_project_summary(final_code_summary, final_pr_summary, final_commit_summary, githubID, repo_url, requirements)
         simplified_summary = simplify_project_info(project_summary, requirements)
         first_commit_date, latest_commit_date = create_repo_start_end_date(repo_url)
-        # project_title = create_project_title(settings.openai_api_key, settings.gh_token, repo_url, requirements)
+        project_title = create_project_title(settings.openai_api_key, settings.gh_token, repo_url, requirements)
         
         # STAR 템플릿인 경우에만 추가 데이터 가져오기
         if template == "STAR":
@@ -59,7 +59,8 @@ def process_repository(template, repo_url, githubID, githubName, requirements):
 
         if template == "BASIC":
             project_data = Project(
-                projectName=simplified_summary.projectName, 
+                # projectName=simplified_summary.projectName, 
+                projectName=project_title, 
                 projectStartedAt=first_commit_date, 
                 projectEndedAt=latest_commit_date,  
                 skillSet=simplified_summary.skillSet,
@@ -68,8 +69,8 @@ def process_repository(template, repo_url, githubID, githubName, requirements):
             )
         elif template == "STAR":
             project_data = StarProject(
-                projectName=simplified_summary.projectName, 
-                # projectName=project_title, 
+                # projectName=simplified_summary.projectName, 
+                projectName=project_title, 
                 projectStartedAt=first_commit_date, 
                 projectEndedAt=latest_commit_date,  
                 skillSet=simplified_summary.skillSet,
@@ -79,7 +80,8 @@ def process_repository(template, repo_url, githubID, githubName, requirements):
             )
         elif template == "GITFOLIO":
                 project_data = GitfolioProject(
-                projectName=simplified_summary.projectName, 
+                # projectName=simplified_summary.projectName, 
+                projectName=project_title, 
                 projectStartedAt=first_commit_date, 
                 projectEndedAt=latest_commit_date,  
                 skillSet=simplified_summary.skillSet,
@@ -149,7 +151,7 @@ def create_trouble_shooting(openai_api_key, code_summary, pr_summary, commit_sum
     trouble_shooting = generate_trouble_shooting(openai_api_key, code_summary, pr_summary, commit_summary, requirements)
     return trouble_shooting
 
-# # 프로젝트 제목 생성
-# def create_project_title(openai_api_key, gh_token, repo_url, requirements):
-#     project_title = generate_project_title(openai_api_key, gh_token, repo_url, requirements)
-#     return project_title
+# 프로젝트 제목 생성
+def create_project_title(openai_api_key, gh_token, repo_url, requirements):
+    project_title = generate_project_title(openai_api_key, gh_token, repo_url, requirements)
+    return project_title
