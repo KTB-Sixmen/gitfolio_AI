@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION = 'ap-northeast-2'
         ECR_REGISTRY = credentials('ecr-registry')
         DISCORD_CI_WEBHOOK = credentials('ai-dev-discord-ci-webhook')
-        DOCKER_TAG = 'dev'  // dev -> prod로 변경
+        DOCKER_TAG = 'prod'  // dev -> prod로 변경
         ENV_FILE = '/var/lib/jenkins/environments/.env.ai'
     }
 
@@ -14,7 +14,7 @@ pipeline {
             steps {
                 script {
                     deleteDir()
-                    git branch: 'feature/ai-cicd',
+                    git branch: 'develop',
                         url: 'https://github.com/KTB-Sixmen/gitfolio_AI.git'
                 }
             }
@@ -104,7 +104,7 @@ pipeline {
             }
         }
          success {
-                discordSend description: "Dev AI 빌드 및 배포 성공",
+                discordSend description: "AI 서비스 CI 파이프라인 성공",
                           footer: "Jenkins Pipeline Success",
                           link: env.BUILD_URL,
                           result: currentBuild.currentResult,
@@ -113,7 +113,7 @@ pipeline {
             }
 
             failure {
-                discordSend description: "Dev AI 빌드 및 배포 실패",
+                discordSend description: "AI 서비스 CI 파이프라인 실패",
                           footer: "Jenkins Pipeline Failed",
                           link: env.BUILD_URL,
                           result: currentBuild.currentResult,
