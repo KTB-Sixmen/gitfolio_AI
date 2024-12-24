@@ -1,7 +1,6 @@
 from openai import OpenAI
 from app.config.settings import settings
-from app.dto.resume_dto import GptProject
-from app.dto.resume_modify_dto import ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
+from app.dto.resume_dto import GptProject, ResumeResponseDto, ProjectTitleDto, RoleAndTaskDto, TroubleShootingDto, StarDto
 from app.services.github_service import get_github_profile_and_repos, project_title_candidate
 import tiktoken 
 import json
@@ -293,9 +292,9 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
                 {
                     "role": "system",
                     "content": (
-                        "You are a friendly and professional resume modification expert."
-                        "Your task is to update only the specified sections of the resume based on the user's request while leaving all other parts unchanged." 
-                        "Ensure the modifications are concise, professional, and aligned with the tone of the original resume."
+                        "You are a professional resume modification assistant. Your task is to update only the `selected_text` "
+                        "Ensure that the updated text aligns with the style and tone of the original text."
+                        "한글로 작성해주세요."
                     )
                 },
                 {
@@ -305,11 +304,9 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
                         f"{json.dumps(context_data, indent=4)}\n\n"
                         "Selected Text:\n"
                         f"{selected_text}\n\n"
-                        # "Key Path:\n"
-                        # f"{key_path}\n\n"
                         "User Request:\n"
                         f"{requirements}\n\n"
-                        "Please update the selected text based on the instructions provided."
+                        "User Request에 맞게 선택된 텍스트를 수정해주세요."
                     )
                 },
                 {
@@ -331,7 +328,7 @@ def resume_update(openai_api_key, requirements, selected_text, context_data, pro
     except Exception as e:
         print(f"Error modifying resume with GPT: {e}")
         return context_data  # 오류 발생 시 기존 데이터 반환
-
+    
 # 이력서 제목 생성
 def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.project_title_prompt):
     try:
@@ -344,8 +341,9 @@ def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.p
         # 후보 검증 및 최종 제목 결정
         if title_candidate_1 == title_candidate_2:
             print("Title Candidate 1 and 2 are identical.")
-            title = {"projectTitle": title_candidate_1}
-            return title
+            # title = {"projectTitle": title_candidate_1}
+            # return title
+            return title_candidate_1
         
         print("프로젝트 제목을 추론합니다.")
         
@@ -358,8 +356,10 @@ def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.p
                     "role": "system",
                     "content": (
                         "You are a professional assistant tasked with deciding the best project title. "
-                        "Evaluate the provided title candidates and choose the most appropriate one. "
-                        "Focus on clarity, relevance, and alignment with typical project naming conventions."
+                        "1. Be a single, clear, and concise word."
+                        "2. Reflect the essence or purpose of the project."
+                        "3. Avoid multi-word phrases, additional context, or unnecessary details. "
+                        "Return only the single-word title as plain text."
                     )
                 },
                 {
@@ -395,19 +395,13 @@ def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.p
         print(f"Final Response Text: {response_text}")
         
         # ProjectTitleDto 객체로 반환
-        return response_text
+        return response_text.projectTitle
 
         
     except Exception as e:
         print(f"Error modifying resume with GPT: {e}")
-        return {
-            "projectTitle": "",
-            "title_candidates": {
-                "title_candidate_1": "",
-                "title_candidate_2": "",
-                "title_candidate_3": ""
-            }
-        }
+        return {"projectTitle": "Untitled"}
+        
 
 # 맡은 업무 생성        
 def generate_role_and_task(openai_api_key, code_summary, pr_summary, commit_summary, requirements, prompt=settings.role_and_task_prompt):

@@ -1,17 +1,19 @@
 from fastapi import APIRouter, HTTPException
-from app.dto.resume_dto import ResumeRequest, ResumeResponse
-from app.dto.resume_modify_dto import UpdateRequestDto,ResumeResponseDto
+from app.dto.resume_dto import ResumeRequest, ResumeResponse, UpdateRequestDto,ResumeResponseDto
 from app.services.api_service import process_repository
 from concurrent.futures import ProcessPoolExecutor
 import asyncio
+import json
 import logging
 from app.services.stack_service import generate_techstack
 from app.services.gpt_service import generate_aboutme, resume_update
+from app.services.data_service import find_field_for_text, update_field_by_path, get_value_by_path
 from app.config.settings import settings
-
-
+from copy import deepcopy
+from pydantic import ValidationError
 
 router = APIRouter()
+
 
 @router.put("/api/ai/resumes", response_model=ResumeResponseDto)
 async def update_resume(request: UpdateRequestDto):
@@ -31,18 +33,58 @@ async def update_resume(request: UpdateRequestDto):
             context_data=request.resumeInfo.dict()
         )
 
+        print(updated_resume)
+        # return updated_resume
+
         # 업데이트된 결과 확인
         print("=== Updated Resume Data ===")
-        print(updated_resume)
+        if hasattr(updated_resume, "dict"):
+            updated_resume_dict = updated_resume.dict()
+        else:
+            updated_resume_dict = updated_resume
+            
+        print("=== Updated Resume 딕트 ===") 
+        print(updated_resume_dict)
+        print(json.dumps(updated_resume_dict, indent=4, ensure_ascii=False))
 
-        # 업데이트된 결과 반환
-        return updated_resume
+        # 선택된 텍스트가 어느 필드에 있는지 찾기
+        print("=== 선택된 텍스트의 필드 찾기 ===")
+        matching_fields = find_field_for_text(request.resumeInfo.dict(), request.selectedText)
+        print(f"🔍 매칭된 필드 경로: {matching_fields}")
+
+        if not matching_fields:
+            raise HTTPException(status_code=400, detail="Selected text does not match any field in the context data.")
+
+        
+        # 원본 데이터를 deepcopy
+        original_data = deepcopy(request.resumeInfo.dict())
+        
+        print(original_data)
+        # return updated_resume
+        # 수정된 필드만 병합
+        for field_path in matching_fields:
+            updated_value = get_value_by_path(updated_resume_dict, field_path)
+            print(f"✅ 수정된 값 for path {field_path}: {updated_value}")
+            if updated_value is not None:
+                update_field_by_path(original_data, field_path, updated_value)
+
+        # 병합 후 데이터 확인
+        print("=== 병합된 최종 데이터 확인 ===")
+        print(json.dumps(original_data, indent=4, ensure_ascii=False))
+
+        # DTO 변환
+        updated_response = ResumeResponseDto(**original_data)
+        print("=== DTO 변환 성공 ===")
+        return updated_response
+
+    except ValidationError as e:
+        print(f"❌ DTO Validation Error: {e.json()}")
+        raise HTTPException(status_code=422, detail=f"DTO validation failed: {e.json()}")
 
     except Exception as e:
-        print(f"Error in update_resume: {e}")
+        print(f"❌ Error in update_resume: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while updating the resume.")
-
-
+    
 # 이력서 생성 api
 @router.post("/api/ai/resumes", response_model=ResumeResponse)
 async def generate_resume(request: ResumeRequest):
