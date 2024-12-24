@@ -1,8 +1,15 @@
+version: "3.8"
+
 services:
   ai:
     platform: linux/amd64
     image: 727646500036.dkr.ecr.ap-northeast-2.amazonaws.com/gitfolio/ai:dev
     container_name: gitfolio_ai
+
+    # (1) .env 파일로 환경변수 주입
+    env_file:
+      - .env
+
     ports:
       - target: 8000
         published: 80
@@ -10,8 +17,7 @@ services:
       - target: 8000
         published: 443
         protocol: tcp
-    env_file:
-      - .env
+
     networks:
       - ai
 
