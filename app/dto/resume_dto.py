@@ -138,13 +138,12 @@ class ResumeResponseDto(BaseModel):
     position: str
     techStack: List[str]
     aboutMe: str
-    tags: Optional[List[str]]  # null 가능
-    workExperiences: List[WorkExperience]
-    # projects: List[ProjectResponse]
+    tags: Optional[List[str]]
+    workExperiences: Optional[List[WorkExperience]]
     projects: List[Union[ProjectUpdate, StarProjectUpdate, GitfolioProjectUpdate]]
-    links: Optional[List[Link]]  # null 가능
-    educations: List[Education]
-    certificates: List[Certificate]
+    links: Optional[List[Link]]
+    educations: Optional[List[Education]]
+    certificates: Optional[List[Certificate]]
     
 class updateResumeDto(BaseModel):
     template: str
@@ -157,11 +156,11 @@ class updateResumeDto(BaseModel):
     techStack: List[str]
     aboutMe: str
     tags: Optional[List[str]]  # null 가능
-    workExperiences: List[WorkExperience]
+    workExperiences: Optional[List[WorkExperience]]
     projects: List[Union[Project, StarProject, GitfolioProject]]  # 추가된 필드
     links: Optional[List[Link]]  # null 가능
-    educations: List[Education]
-    certificates: List[Certificate]
+    educations: Optional[List[Education]]
+    certificates: Optional[List[Certificate]]
     
 class UpdateRequestDto(BaseModel):
     selectedText: str
