@@ -5,7 +5,8 @@ pipeline {
         AWS_REGION = 'ap-northeast-2'
         ECR_REGISTRY = credentials('ecr-registry')
         DISCORD_CI_WEBHOOK = credentials('ai-dev-discord-ci-webhook')
-        DOCKER_TAG = 'dev'  // dev -> prod로 변경
+        DISCORD_CD_WEBHOOK = credentials('ai-dev-discord-cd-webhook')
+        DOCKER_TAG = 'dev'
         ENV_FILE = '/var/lib/jenkins/environments/.env.ai'
     }
 
@@ -25,32 +26,13 @@ pipeline {
                 script {
                     // 환경 변수 파일 복사
                     if (fileExists(ENV_FILE)) {
-                                    sh """
-                                        cp ${ENV_FILE} .env
-                                        echo '환경 파일 복사 완료: ${ENV_FILE}'
-
-                                        # .env 파일에서 환경변수를 추출하여 Jenkins 환경에 설정
-                                        export OPENAI_API_KEY=\$(grep OPENAI_API_KEY .env | cut -d '=' -f2)
-                                        export GH_TOKEN=\$(grep GH_TOKEN .env | cut -d '=' -f2)
-                                        export HOST=\$(grep HOST .env | cut -d '=' -f2)
-                                        export PORT=\$(grep PORT .env | cut -d '=' -f2)
-
-                                        # 환경변수를 Jenkins 환경에 설정
-                                        echo "OPENAI_API_KEY=\${OPENAI_API_KEY}" >> env.properties
-                                        echo "GH_TOKEN=\${GH_TOKEN}" >> env.properties
-                                        echo "HOST=\${HOST}" >> env.properties
-                                        echo "PORT=\${PORT}" >> env.properties
-                                    """
-
-                                    // env.properties 파일을 Jenkins 환경변수로 로드
-                                    def props = readProperties file: 'env.properties'
-                                    env.OPENAI_API_KEY = props.OPENAI_API_KEY
-                                    env.GH_TOKEN = props.GH_TOKEN
-                                    env.HOST = props.HOST
-                                    env.PORT = props.PORT
-                                } else {
-                                    error "환경 파일을 찾을 수 없습니다: ${ENV_FILE}"
-                                }
+                        sh """
+                            cp ${ENV_FILE} .env
+                            echo '환경 파일 복사 완료: ${ENV_FILE}'
+                        """
+                    } else {
+                        error "환경 파일을 찾을 수 없습니다: ${ENV_FILE}"
+                    }
 
                     // ECR 로그인
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
@@ -82,12 +64,77 @@ pipeline {
                             --build-arg PORT=${env.PORT} \
                             .
 
-        # 빌드된 이미지의 환경변수 확인
-                        echo "===== 이미지 환경변수 확인 ====="
-                        docker run --rm ${imageTag} env | grep -E "OPENAI_API_KEY|GH_TOKEN|HOST|PORT"
-
                         docker push ${imageTag}
                     """
+                }
+            }
+        }
+
+        stage('EC2 배포') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                    credentialsId: 'aws-credentials',
+                                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+
+                        def instanceIds = sh(
+                            script: """
+                                aws ec2 describe-instances \
+                                    --region ${AWS_REGION} \
+                                    --filters 'Name=tag:Service,Values=ai' \
+                                        'Name=tag:Environment,Values=dev' \
+                                        'Name=tag:Type,Values=ec2' \
+                                        'Name=instance-state-name,Values=running' \
+                                    --query 'Reservations[].Instances[].InstanceId' \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        if (instanceIds) {
+                            // 먼저 .env 파일을 EC2로 복사하는 명령을 추가합니다
+                            sh """
+                                aws ssm send-command \
+                                    --instance-ids "${instanceIds}" \
+                                    --document-name "AWS-RunShellScript" \
+                                    --comment "환경 파일 복사" \
+                                    --parameters commands='
+                                        cd /home/ec2-user
+                                        cat > .env << 'EOL'
+                                        $(cat ${ENV_FILE})
+                                        EOL
+                                        chmod 600 .env
+                                    ' \
+                                    --timeout-seconds 600 \
+                                    --region ${AWS_REGION}
+                            """
+
+                        if (instanceIds) {
+                            sh """
+                                aws ssm send-command \
+                                    --instance-ids "${instanceIds}" \
+                                    --document-name "AWS-RunShellScript" \
+                                    --comment "AI 서버 배포" \
+                                    --parameters commands='
+                                        cd /home/ec2-user
+                                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                                        export AWS_DEFAULT_REGION=${AWS_REGION}
+                                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                                        docker-compose down -v --rmi all
+                                        docker builder prune -f --filter until=24h
+                                        docker image prune -f
+                                        docker-compose pull
+                                        docker-compose up -d
+                                    ' \
+                                    --timeout-seconds 600 \
+                                    --region ${AWS_REGION}
+                            """
+                        } else {
+                            error "실행 중인 AI 서비스 EC2 인스턴스를 찾을 수 없습니다."
+                        }
+                    }
                 }
             }
         }
@@ -103,23 +150,6 @@ pipeline {
                 """
             }
         }
-         success {
-                discordSend description: "Dev AI 빌드 및 배포 성공",
-                          footer: "Jenkins Pipeline Success",
-                          link: env.BUILD_URL,
-                          result: currentBuild.currentResult,
-                          title: JOB_NAME,
-                          webhookURL: DISCORD_CI_WEBHOOK
-            }
-
-            failure {
-                discordSend description: "Dev AI 빌드 및 배포 실패",
-                          footer: "Jenkins Pipeline Failed",
-                          link: env.BUILD_URL,
-                          result: currentBuild.currentResult,
-                          title: JOB_NAME,
-                          webhookURL: DISCORD_CI_WEBHOOK
-            }
 
     }
 
