@@ -73,9 +73,11 @@ RESUME_UPDATE_PROMPT = (
 # 프로젝트 이름 생성
 PROJECT_TITLE_PROMPT = (
     
-    "Return the best project title as plain text. "
-    "Do not include any additional explanation, formatting, or context. "
-    "Only provide the title itself."
+    "- Be concise yet descriptive.\n"
+    "- Reflect the essence and purpose of the project.\n"
+    "- Avoid overly generic terms like 'Game' unless it is the only appropriate option.\n\n"
+    "Your response should return a title that feels natural and well-aligned with the project context. "
+    "Provide only the title as plain text, without additional explanation or formatting."
 )
 
 # 맡은 업무 생성
