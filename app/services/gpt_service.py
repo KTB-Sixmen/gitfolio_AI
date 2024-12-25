@@ -356,10 +356,9 @@ def generate_project_title(openai_api_key, gh_token, repo_url, prompt=settings.p
                     "role": "system",
                     "content": (
                         "You are a professional assistant tasked with deciding the best project title. "
-                        "1. Be a single, clear, and concise word."
+                        "1. Be a single, clear"
                         "2. Reflect the essence or purpose of the project."
                         "3. Avoid multi-word phrases, additional context, or unnecessary details. "
-                        "Return only the single-word title as plain text."
                     )
                 },
                 {
