@@ -24,36 +24,34 @@ pipeline {
             }
         }
 
-        // Git 저장소 체크아웃 단계
-                stage('Checkout') {
-                    steps {
-                        // Git 저장소 URL을 직접 지정하여 체크아웃
-                        git branch: 'feature/ai-cicd',
-                            url: 'https://github.com/KTB-Sixmen/gitfolio_AI.git'
-                    }
-                }
+        stage('Checkout') {
+            steps {
+                // Git 저장소 URL을 직접 지정하여 체크아웃
+                git branch: 'develop',
+                    url: 'https://github.com/KTB-Sixmen/gitfolio_AI.git'
+            }
+        }
 
         stage('Docker Build & Push') {
             steps {
                 script {
-                    // Docker Hub 로그인
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials',
-                                                        usernameVariable: 'DOCKER_USER',
-                                                        passwordVariable: 'DOCKER_PASS')]) {
-                        sh """
-                            sh "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin"
+                                                    usernameVariable: 'DOCKER_USER',
+                                                    passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
                             # Docker 이미지 빌드
                             docker build \
-                                --build-arg OPENAI_API_KEY=${env.OPENAI_API_KEY} \
-                                --build-arg GH_TOKEN=${env.GH_TOKEN} \
-                                --build-arg HOST=${env.HOST} \
-                                --build-arg PORT=${env.PORT} \
+                                --build-arg OPENAI_API_KEY="$OPENAI_API_KEY" \
+                                --build-arg GH_TOKEN="$GH_TOKEN" \
+                                --build-arg HOST="$HOST" \
+                                --build-arg PORT="$PORT" \
                                 -t ${DOCKER_IMAGE} .
 
                             # Docker 이미지 푸시
                             docker push ${DOCKER_IMAGE}
-                        """
+                        '''
                     }
                 }
             }
